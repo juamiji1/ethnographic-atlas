@@ -11,7 +11,7 @@ library(sf)
 set.seed("123")
 
 # change to your working directory here
-setwd("C:/Users/juami/Dropbox/Nathan project/oldra/")
+setwd("C:/Users/juami/Dropbox/EA-Maps-Nathan-project/oldra/")
 
 
 #-------------------------------------------------------------------------------
@@ -105,24 +105,77 @@ motifs <- motifs %>%
          animal_not_human_count = animal_count * not_human)
 
 #-------------------------------------------------------------------------------
-# Preparing groups and motifs together 
+# FIXING NA groups using the BEREZKIN group number in the EA 
 #-------------------------------------------------------------------------------  
 #groups <- read_dta("source/raw/folklore/data/Replication_Data_Folklore/Original_Files/Motifs_Berezkin_groups.dta") %>% 
 #  dplyr::select(group_Berezkin, a1:n9)
 groups <- read_dta("source/raw/folklore/data/Replication_Data_Folklore/Original_Files/Motifs_EA_groups.dta") %>% 
   dplyr::select(atlas, group_Berezkin, a1:n9)
-  
+
+#Fixing the BRAZILIAN's Berezkin group (Replacing with the PORTUGUES info)
+source_row <- which(groups$atlas == "PORTUGUES")  
+target_row <- which(groups$atlas == "BRAZILIAN")  
+
+columns_to_copy <- setdiff(names(groups), "atlas")
+groups[target_row, columns_to_copy] <- groups[source_row, columns_to_copy]
+
+#Fixing the BAGIRMI's Berezkin group (Replacing with the v114=70 in EA info)
+groups[which(groups$atlas == "BAGIRMI"), columns_to_copy] <- groups[which(groups$atlas == "SARA"), columns_to_copy]
+
+#Fixing the CANTONESE's Berezkin group (Replacing with the v114=164 in EA info - only other group in the book)
+groups[which(groups$atlas == "CANTONESE"), columns_to_copy] <- groups[which(groups$atlas == "MINCHINES"), columns_to_copy]
+
+#Fixing the Berezkin group v144=369 (Replacing with PORTUGUES in EA info - Language based on portugues according to the book)
+groups[which(groups$atlas == "DJUKA"), columns_to_copy] <- groups[which(groups$atlas == "PORTUGUES"), columns_to_copy]
+groups[which(groups$atlas == "SARAMACCA"), columns_to_copy] <- groups[which(groups$atlas == "PORTUGUES"), columns_to_copy]
+
+#Fixing the FUR's Berezkin group (No other group in berezkin cluster nor language reference in the book - v144=98)
+#groups[which(groups$atlas == "FUR"), columns_to_copy] <- groups[which(groups$atlas == ""), columns_to_copy]
+
+#Fixing the GUATO's Berezkin group (No other group in berezkin cluster nor language reference in the book - v144=398)
+#groups[which(groups$atlas == "GUATO"), columns_to_copy] <- groups[which(groups$atlas == ""), columns_to_copy]
+
+#Fixing the HUTSUL's Berezkin group (Replacing with the v114=126 in EA info - closer ethnicity within group in the book)
+groups[which(groups$atlas == "HUTSUL"), columns_to_copy] <- groups[which(groups$atlas == "CZECHS"), columns_to_copy]
+
+#Fixing the IDOMA's Berezkin group (Replacing with the v114=42 in EA info - closest ethnicity within group in the book)
+groups[which(groups$atlas == "IDOMA"), columns_to_copy] <- groups[which(groups$atlas == "AFO"), columns_to_copy]
+groups[which(groups$atlas == "IGALA"), columns_to_copy] <- groups[which(groups$atlas == "AFO"), columns_to_copy]
+groups[which(groups$atlas == "KORO"), columns_to_copy] <- groups[which(groups$atlas == "AFO"), columns_to_copy]
+
+#Fixing the KURAMA's Berezkin group (Replacing with the v114=63 in EA info - closer ethnicity within group in the book)
+groups[which(groups$atlas == "KURAMA"), columns_to_copy] <- groups[which(groups$atlas == "KAGORO"), columns_to_copy]
+
+#Fixing the CANTONESE's Berezkin group (Replacing with the v114=71 in EA info - closer ethinicity in the book)
+groups[which(groups$atlas == "MBANDJA"), columns_to_copy] <- groups[which(groups$atlas == "NGBANDI"), columns_to_copy]
+
+#Fixing the CANTONESE's Berezkin group (Replacing with the v114=120 in EA info - 1st group in the book)
+groups[which(groups$atlas == "TRISTAN"), columns_to_copy] <- groups[which(groups$atlas == "NEWENGLAN"), columns_to_copy]
+
+#Fixing the CANTONESE's Berezkin group (Replacing with the v114=233 in EA info - 1st group in the book)
+groups[which(groups$atlas == "YIRYORONT"), columns_to_copy] <- groups[which(groups$atlas == "WIKMUNKAN"), columns_to_copy]
+
+#Fixing the CANTONESE's Berezkin group (Replacing with the v114=66 in EA info - 1st group in the book)
+groups[which(groups$atlas == "YUNGUR"), columns_to_copy] <- groups[which(groups$atlas == "MUMUYE"), columns_to_copy]
+
 #Wide to long data set 
 groups_motifs <- groups %>% 
   pivot_longer(a1:n9, names_to = "motif_id", values_to = "share") %>% 
   mutate(motif_id = gsub("_$", "", motif_id))
 
+#keeping only stories belonging to each group 
 groups_motifs <- groups_motifs %>% 
   mutate(share = as.numeric(share)) %>% 
   filter(share != 0) %>% 
   mutate(share = ifelse(share == 2, 1, share)) %>% 
   filter(!is.na(share))
 
+#For later use
+write.csv(groups_motifs, "C:/Users/juami/Dropbox/EA-Maps-Nathan-project/data/interim/Motifs_EA_groups_long.csv", row.names=FALSE)
+
+#-------------------------------------------------------------------------------
+# Preparing groups and motifs together 
+#-------------------------------------------------------------------------------  
 #Joining motifs to groups using the Motifs IDs as the key variable
 groups_motifs <- groups_motifs %>% 
   left_join(motifs, by = "motif_id")
@@ -173,7 +226,7 @@ groups_motifs_coll <- groups_motifs_coll %>%
                 .names = '{col}_med'))
 
 
-write.csv(groups_motifs_coll, "C:/Users/juami/Dropbox/Nathan project/data/interim/folklore_ea_nature.csv", row.names=FALSE)
+write.csv(groups_motifs_coll, "C:/Users/juami/Dropbox/EA-Maps-Nathan-project/data/interim/folklore_ea_nature.csv", row.names=FALSE)
 
 
 

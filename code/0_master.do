@@ -11,7 +11,7 @@ clear all
 
 *Setting directories 
 if c(username) == "juami" {
-	gl localpath "C:\Users/`c(username)'\Dropbox\Nathan project"
+	gl localpath "C:\Users/`c(username)'\Dropbox\EA-Maps-Nathan-project"
 	*gl overleafpath "C:\Users/`c(username)'\Dropbox\Overleaf\GD-draft-slv"
 	gl do "C:\Github\ethnographic-atlas\code"
 	
@@ -22,8 +22,8 @@ else {
 
 gl data "${localpath}\data"
 gl maps "${localpath}\maps"
-gl tables "${overleafpath}\tables"
-gl plots "${overleafpath}\plots"
+gl tables "${localpath}\tables"
+gl plots "${localpath}\plots"
 
 cd "${data}"
 
