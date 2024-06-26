@@ -181,6 +181,10 @@ gen sh_natsubj_humobj_motif_atleast=d_nature_scl_human_ocl/n_motifs
 gen sh_humsubj_natobj_motif_atleast=d_human_scl_nature_ocl/n_motifs
 gen sh_natsubj_humobj_motif_major=d_nature_scl_human_ocl_major/n_motifs
 
+END
+
+
+
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
 la var sh_nature_subj_excl "Share of triplets with a nature subject (Exclusive)"
