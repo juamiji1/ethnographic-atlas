@@ -237,10 +237,10 @@ save `Triplets_socl', replace
 
 
 *-------------------------------------------------------------------------------
-* MERGING TRIPLETS WITH MOTIFS-EA CONVERSION DATA (Michalopolous)
+* MERGING TRIPLETS WITH MOTIFS-EA-WESEE CONVERSION DATA (Our Extension)
 *
 *-------------------------------------------------------------------------------
-import delimited "${data}/interim\Motifs_EA_groups_long.csv", encoding("utf8") clear 	// This data has the BRAZILIAN group already fixed.
+import delimited "${data}/interim\Motifs_EA_WESEE_groups_long.csv", encoding("utf8") clear 	// This data has the BRAZILIAN group already fixed.
 
 merge m:1 motif_id using `Triplets_scl', keep(1 3) gen(merge_triplet_ocl)
 merge m:1 motif_id using `Triplets_excl_scl', keep(1 3) gen(merge_triplet_excl_ocl)
@@ -317,8 +317,8 @@ la var sh_nature_subj_human_obj_excl "Share of triplets with a nature subject an
 la var sh_natsubj_humobj_motif_atl_excl "Share of motifs with at least one triplet with a nature subject and a human object"
 la var sh_natsubj_humobj_motif_maj_excl "Share of motifs in which nature subject and human object are greater than the opposite"
 
-tempfile Motifs_EA
-save `Motifs_EA', replace 
+tempfile Motifs_EA_WESEE
+save `Motifs_EA_WESEE', replace 
 
 
 /*-------------------------------------------------------------------------------
@@ -353,7 +353,7 @@ gr close
 * FIXING CONVERSION FROM EA to ETHNOLOGUE (Nunn & Giulianno, 2017)
 *
 *-------------------------------------------------------------------------------
-use "${data}/raw\ethnologue\ancestral_characteristics_database_language_level\Ancestral_Characteristics_Database_Language_Level\EthnoAtlas_Ethnologue16_baseline_by_language.dta", clear 
+use "${data}/raw\ethnologue\ancestral_characteristics_database_language_level\Ancestral_Characteristics_Database_Language_Level\EthnoAtlas_Ethnologue16_extended_EE_Siberia_WES_by_language.dta", clear 
 
 *Fixing strings
 gen atlas=subinstr(v107,".","",.)
@@ -362,7 +362,7 @@ replace atlas=trim(atlas)
 keep id atlas v107
 keep if atlas!=""
 
-merge m:1 atlas using `Motifs_EA', keep(1 3) gen(merge_mea)		// 9 EA groups not found in the ethnologue
+merge m:1 atlas using `Motifs_EA_WESEE', keep(1 3) gen(merge_mea)		// 9 EA groups not found in the ethnologue
 
 tab atlas if merge_mea==1
 drop merge_mea
@@ -374,4 +374,3 @@ export delimited "${data}/interim\Motifs_EA_Ethnologue_humanvsnature_subjs_objs.
 
 
 *END
-

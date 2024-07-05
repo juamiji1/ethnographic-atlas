@@ -46,6 +46,7 @@ library(rmapshaper)
 library(geojsonio)
 library(plyr)
 library(spatialEco)
+library(haven)
 
 #Directory: 
 current_path ='C:/Users/juami/Dropbox/EA-Maps-Nathan-project/'
