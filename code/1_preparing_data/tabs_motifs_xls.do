@@ -1,4 +1,7 @@
 
+*-------------------------------------------------------------------------------
+* Tabulate frequency of Subjects, Objects, and Actions 
+*-------------------------------------------------------------------------------
 import delimited "${data}/raw\triplets_and_characterizations_unrolled.csv", varnames(1) clear 
 
 replace subject=strtrim(lower(subject))
@@ -44,7 +47,16 @@ preserve
 	
 	drop total 
 	
+	gsort -freq
+	
 	export excel using "${data}\interim\tabs_motifs.xlsx", sheet("action", replace) 
+	
+	gen common=_n - 1
+	
+	keep if common>0 & common<6
+	
+	tempfile CACTIONS
+	save `CACTIONS', replace	
 restore
 
 collapse (sum) freq, by(object)
@@ -54,4 +66,59 @@ gen percent=freq*100/total
 
 drop total 
 
+gsort -freq
+
 export excel using "${data}\interim\tabs_motifs.xlsx", sheet("object", replace) 
+
+
+*-------------------------------------------------------------------------------
+* Tabulate Subjects and Objects for most common actions
+*-------------------------------------------------------------------------------
+import delimited "${data}/raw\triplets_and_characterizations_unrolled.csv", varnames(1) clear 
+
+replace subject=strtrim(lower(subject))
+replace action=strtrim(lower(action))
+replace object=strtrim(lower(object))
+
+*Dropping duplicates by triplet-sentence-motif (almost identical triplets - deleting 114 obs)
+duplicates drop subject - desc_english_googleapi, force 
+
+gen freq=1 
+
+*Merging most common actions 
+merge m:1 action using `CACTIONS', keep(3) nogen 
+
+forval i=1/5 {
+	
+	preserve
+		keep if common==`i'
+		collapse (sum) freq, by(subject)
+
+		egen total=sum(freq)
+		gen percent=freq*100/total
+		
+		drop total 
+		
+		gsort -freq
+		
+		export excel using "${data}\interim\tabs_motifs.xlsx", sheet("subject_common_`i'_action", replace)
+	restore 
+
+	preserve
+		keep if common==`i'
+		collapse (sum) freq, by(object)
+
+		egen total=sum(freq)
+		gen percent=freq*100/total
+
+		drop total 
+
+		gsort -freq
+
+		export excel using "${data}\interim\tabs_motifs.xlsx", sheet("object_common_`i'_action", replace) 
+	restore 
+
+}
+
+
+
