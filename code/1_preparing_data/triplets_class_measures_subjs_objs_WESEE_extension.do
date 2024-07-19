@@ -298,24 +298,24 @@ la var sh_nature_subj_excl "Share of triplets with a nature subject (Exclusive)"
 la var sh_nature_smotif_atleast_nonexcl "Share of motifs with at least one nature subject in a triplet (Non-Exclusive)"
 la var sh_nature_smotif_atleast_excl "Share of motifs with at least one nature subject in a triplet (Exclusive)"
 la var sh_nature_smotif_major_nonexcl "Share of motifs in which nature subjects are greater than human (Non-Exclusive)"
-la var sh_nature_smotif_major_excl "Share of motifs in which nature subjects are greater than human (Exclusive)"
+la var sh_nature_smotif_major_excl "Share of motifs in which triplets with nature subjects are greater than human (Exclusive)"
 
 la var sh_nature_obj_nonexcl "Share of triplets with a nature object (Non-Exclusive)"
 la var sh_nature_obj_excl "Share of triplets with a nature object (Exclusive)"
 la var sh_nature_omotif_atleast_nonexcl "Share of motifs with at least one nature object in a triplet (Non-Exclusive)"
 la var sh_nature_omotif_atleast_excl "Share of motifs with at least one nature object in a triplet (Exclusive)"
-la var sh_nature_omotif_major_nonexcl "Share of motifs in which nature objects are greater than human (Non-Exclusive)"
-la var sh_nature_omotif_major_excl "Share of motifs in which nature objects are greater than human (Exclusive)"
+la var sh_nature_omotif_major_nonexcl "Share of motifs in which triplets with nature objects are greater than human (Non-Exclusive)"
+la var sh_nature_omotif_major_excl "Share of motifs in which triplets with nature objects are greater than human (Exclusive)"
 
 la var sh_nature_subj_human_obj "Share of triplets with a nature subject and a human object (Non-Exclusive)"
 la var sh_human_subj_nature_obj "Share of triplets with a human subject and a nature object (Non-Exclusive)"
 la var sh_natsubj_humobj_motif_atleast "Share of motifs with at least one triplet with a nature subject and a human object"
 la var sh_humsubj_natobj_motif_atleast "Share of motifs with at least one triplet with a human subject and a nature object"
-la var sh_natsubj_humobj_motif_major "Share of motifs in which nature subject and human object are greater than the opposite"
+la var sh_natsubj_humobj_motif_major "Share of motifs in which triplets with nature subject and human object are greater than the opposite"
 
 la var sh_nature_subj_human_obj_excl "Share of triplets with a nature subject and a human object (Exclusive)"
 la var sh_natsubj_humobj_motif_atl_excl "Share of motifs with at least one triplet with a nature subject and a human object"
-la var sh_natsubj_humobj_motif_maj_excl "Share of motifs in which nature subject and human object are greater than the opposite"
+la var sh_natsubj_humobj_motif_maj_excl "Share of motifs in which triplets with nature subject and human object are greater than the opposite"
 
 tempfile Motifs_EA_WESEE
 save `Motifs_EA_WESEE', replace 
