@@ -216,25 +216,50 @@ preserve
 	save `Triplets_excl_socl', replace
 restore 
 
+preserve 
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+
+	*keeping only triplets with some sort ofclassification 
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+
+	*Looking at triplets where subjec=nature & object=human/manmade. 
+	gen nature_scl_human_ocl=1 if nature_scl==1 & (human_ocl==1 | manmade_ocl==1)
+	gen human_scl_nature_ocl=1 if human_scl==1 & nature_ocl==1 
+
+	collapse (sum) n_triplets_socl=obs_tag nature_scl_human_ocl human_scl_nature_ocl, by(motif_id)
+
+	gen d_nature_scl_human_ocl=(nature_scl_human_ocl>0) if nature_scl_human_ocl!=.
+	gen d_human_scl_nature_ocl=(human_scl_nature_ocl>0) if human_scl_nature_ocl!=.
+	gen d_nature_scl_human_ocl_major=(nature_scl_human_ocl>human_scl_nature_ocl) if nature_scl_human_ocl!=. & human_scl_nature_ocl!=.
+
+	tempfile Triplets_socl
+	save `Triplets_socl', replace
+restore
+
+*-------------------------------------------------------------------------------
+* Calculating total type of triplet per motif (Special cases)
+*-------------------------------------------------------------------------------
+
+*Keeping triplets with any kind of nature mentioning or nature-human interaction
+gen nature_acl= 1 if nature_scl==1 | nature_ocl==1 
+gen nature_scl_human_ocl=1 if nature_scl==1 & (human_ocl==1 | manmade_ocl==1)
+gen human_scl_nature_ocl=1 if human_scl==1 & nature_ocl==1 
+gen nature_human_acl=1 if human_scl_nature_ocl==1 | nature_scl_human_ocl==1
+
 egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
 egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
 
 *keeping only triplets with some sort ofclassification 
 keep if (stotal!=0 | ototal!=0) & obs_tag==1
 
-*Looking at triplets where subjec=nature & object=human/manmade. 
-gen nature_scl_human_ocl=1 if nature_scl==1 & (human_ocl==1 | manmade_ocl==1)
-gen human_scl_nature_ocl=1 if human_scl==1 & nature_ocl==1 
+collapse (sum) n_triplets_acl=obs_tag nature_acl nature_human_acl, by(motif_id)
 
-collapse (sum) n_triplets_socl=obs_tag nature_scl_human_ocl human_scl_nature_ocl, by(motif_id)
+gen d_nature_acl=(nature_acl>0) if nature_acl!=.
+gen d_nature_human_acl=(nature_human_acl>0) if nature_human_acl!=.
 
-gen d_nature_scl_human_ocl=(nature_scl_human_ocl>0) if nature_scl_human_ocl!=.
-gen d_human_scl_nature_ocl=(human_scl_nature_ocl>0) if human_scl_nature_ocl!=.
-gen d_nature_scl_human_ocl_major=(nature_scl_human_ocl>human_scl_nature_ocl) if nature_scl_human_ocl!=. & human_scl_nature_ocl!=.
-
-tempfile Triplets_socl
-save `Triplets_socl', replace
-
+tempfile Triplets_acl
+save `Triplets_acl', replace
 
 *-------------------------------------------------------------------------------
 * MERGING TRIPLETS WITH MOTIFS-EA-WESEE CONVERSION DATA (Our Extension)
@@ -248,6 +273,7 @@ merge m:1 motif_id using `Triplets_ocl', keep(1 3) gen(merge_triplet_scl)
 merge m:1 motif_id using `Triplets_excl_ocl', keep(1 3) gen(merge_triplet_excl_scl)
 merge m:1 motif_id using `Triplets_socl', keep(1 3) gen(merge_triplet_socl)
 merge m:1 motif_id using `Triplets_excl_socl', keep(1 3) gen(merge_triplet_excl_socl)
+merge m:1 motif_id using `Triplets_acl', keep(1 3) gen(merge_triplet_acl)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
 
@@ -292,6 +318,13 @@ gen sh_nature_subj_human_obj_excl=nature_scl_human_ocl_excl/n_triplets_excl_socl
 gen sh_natsubj_humobj_motif_atl_excl=d_nature_scl_human_ocl_excl/n_motifs
 gen sh_natsubj_humobj_motif_maj_excl=d_nat_scl_hum_ocl_excl_major/n_motifs
 
+*Creating special measures (asked by Nathan)
+gen sh_nature_acl=nature_acl/n_triplets_acl
+gen sh_nature_human_acl=nature_human_acl/n_triplets_acl
+
+gen sh_nature_acl_motif_atleast=d_nature_acl/n_motifs
+gen sh_nature_human_acl_motif_atl=d_nature_human_acl/n_motifs
+
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
 la var sh_nature_subj_excl "Share of triplets with a nature subject (Exclusive)"
@@ -316,6 +349,11 @@ la var sh_natsubj_humobj_motif_major "Share of motifs in which triplets with nat
 la var sh_nature_subj_human_obj_excl "Share of triplets with a nature subject and a human object (Exclusive)"
 la var sh_natsubj_humobj_motif_atl_excl "Share of motifs with at least one triplet with a nature subject and a human object"
 la var sh_natsubj_humobj_motif_maj_excl "Share of motifs in which triplets with nature subject and human object are greater than the opposite"
+
+la var sh_nature_acl "Share of triplets with a nature subject or object"
+la var sh_nature_human_acl "Share of triplets with any nature-human interaction"
+la var sh_nature_acl_motif_atleast "Share of motifs with at least one triplet with a nature subject or object"
+la var sh_nature_human_acl_motif_atl "Share of motifs with at least one triplet with any nature-human interaction"
 
 tempfile Motifs_EA_WESEE
 save `Motifs_EA_WESEE', replace 
