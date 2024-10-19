@@ -55,7 +55,8 @@ save `Oclass', replace
 *
 *-------------------------------------------------------------------------------
 *Triplets from Oscar 
-import delimited "${data}/raw\triplets_and_characterizations_unrolled.csv", varnames(1) clear 
+import delimited "${data}/raw\ACT_measures\triplets_and_characterizations_unrolled_scores_merged.csv", varnames(1) clear
+*import delimited "${data}/raw\triplets_and_characterizations_unrolled.csv", varnames(1) clear 
 
 *Fixing strigns to lower to match the classification
 gen original_subject=subject
@@ -87,6 +88,10 @@ drop dup
 *Merging the classifications 
 merge m:1 subject using `Sclass', gen(merge_sclass)
 merge m:1 object using `Oclass', gen(merge_oclass)
+
+*Fixing ATC measures
+rename (e p a) (evaluation potency activity)
+destring evaluation potency activity, replace force
 
 *-------------------------------------------------------------------------------
 * Calculating total type of triplet per motif (only for SUBJECTS)
@@ -240,26 +245,54 @@ restore
 *-------------------------------------------------------------------------------
 * Calculating total type of triplet per motif (Special cases)
 *-------------------------------------------------------------------------------
+preserve
+	*Keeping triplets with any kind of nature mentioning or nature-human interaction
+	gen nature_acl= 1 if nature_scl==1 | nature_ocl==1 
+	gen nature_scl_human_ocl=1 if nature_scl==1 & (human_ocl==1 | manmade_ocl==1)
+	gen human_scl_nature_ocl=1 if human_scl==1 & nature_ocl==1 
+	gen nature_human_acl=1 if human_scl_nature_ocl==1 | nature_scl_human_ocl==1
 
-*Keeping triplets with any kind of nature mentioning or nature-human interaction
-gen nature_acl= 1 if nature_scl==1 | nature_ocl==1 
-gen nature_scl_human_ocl=1 if nature_scl==1 & (human_ocl==1 | manmade_ocl==1)
-gen human_scl_nature_ocl=1 if human_scl==1 & nature_ocl==1 
-gen nature_human_acl=1 if human_scl_nature_ocl==1 | nature_scl_human_ocl==1
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
 
-egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
-egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+	*keeping only triplets with some sort ofclassification 
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+
+	collapse (sum) n_triplets_acl=obs_tag nature_acl nature_human_acl, by(motif_id)
+
+	gen d_nature_acl=(nature_acl>0) if nature_acl!=.
+	gen d_nature_human_acl=(nature_human_acl>0) if nature_human_acl!=.
+
+	tempfile Triplets_acl
+	save `Triplets_acl', replace
+restore
+
+*-------------------------------------------------------------------------------
+* Calculating ACT measures per motif (for SUBJECTS and OBJECTS)
+*-------------------------------------------------------------------------------
+*Where (1) subject is nature (2) potency is positive or negative
+gen nature_ppos=1 if nature_scl==1 & potency>=0 & potency!=.
+gen nature_pneg=1 if nature_scl==1 & potency<0
+
+*Where (1) subject is human (2) nature is object, (3) potency is positive or negative
+gen human_scl_nature_ocl_ppos=1 if human_scl==1 & nature_ocl==1 & potency>=0 & potency!=.
+gen human_scl_nature_ocl_pneg=1 if human_scl==1 & nature_ocl==1 & potency<0
 
 *keeping only triplets with some sort ofclassification 
+egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
 keep if (stotal!=0 | ototal!=0) & obs_tag==1
 
-collapse (sum) n_triplets_acl=obs_tag nature_acl nature_human_acl, by(motif_id)
+collapse (sum) n_triplets_act=obs_tag nature_ppos nature_pneg human_scl_nature_ocl_ppos human_scl_nature_ocl_pneg, by(motif_id)
 
-gen d_nature_acl=(nature_acl>0) if nature_acl!=.
-gen d_nature_human_acl=(nature_human_acl>0) if nature_human_acl!=.
+gen d_nature_ppos=(nature_ppos>0) if nature_ppos!=.
+gen d_nature_pneg=(nature_pneg>0) if nature_pneg!=.
 
-tempfile Triplets_acl
-save `Triplets_acl', replace
+gen d_nature_human_ppos=(human_scl_nature_ocl_ppos>0) if human_scl_nature_ocl_ppos!=.
+gen d_nature_human_pneg=(human_scl_nature_ocl_pneg>0) if human_scl_nature_ocl_pneg!=.
+
+tempfile Triplets_act
+save `Triplets_act', replace
 
 *-------------------------------------------------------------------------------
 * MERGING TRIPLETS WITH MOTIFS-EA-WESEE CONVERSION DATA (Our Extension)
@@ -274,6 +307,7 @@ merge m:1 motif_id using `Triplets_excl_ocl', keep(1 3) gen(merge_triplet_excl_s
 merge m:1 motif_id using `Triplets_socl', keep(1 3) gen(merge_triplet_socl)
 merge m:1 motif_id using `Triplets_excl_socl', keep(1 3) gen(merge_triplet_excl_socl)
 merge m:1 motif_id using `Triplets_acl', keep(1 3) gen(merge_triplet_acl)
+merge m:1 motif_id using `Triplets_act', keep(1 3) gen(merge_triplet_act)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
 
@@ -324,6 +358,17 @@ gen sh_nature_human_acl=nature_human_acl/n_triplets_acl
 
 gen sh_nature_acl_motif_atleast=d_nature_acl/n_motifs
 gen sh_nature_human_acl_motif_atl=d_nature_human_acl/n_motifs
+
+*Creating special act measures
+gen sh_nature_ppos_act=nature_ppos/n_triplets_act
+gen sh_nature_pneg_act=nature_pneg/n_triplets_act
+gen sh_hum_nat_ppos_act=human_scl_nature_ocl_ppos/n_triplets_act
+gen sh_hum_nat_pneg_act=human_scl_nature_ocl_pneg/n_triplets_act
+
+gen sh_nature_ppos_act_atl=d_nature_ppos/n_motifs
+gen sh_nature_pneg_act_atl=d_nature_pneg/n_motifs
+gen sh_hum_nat_ppos_act_atl=d_nature_human_ppos/n_motifs
+gen sh_hum_nat_pneg_act_atl=d_nature_human_pneg/n_motifs
 
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
@@ -388,6 +433,17 @@ la var sh_nature_human_acl "Sh of triplets w any nature-human interaction"
 la var sh_nature_acl_motif_atleast "Sh of motifs w at least one triplet w a nature subject or object"
 la var sh_nature_human_acl_motif_atl "Sh of motifs w at least one triplet w any nature-human interaction"
 
+la var sh_nature_ppos_act "Sh of triplets w a nature subject and potency positive"
+la var sh_nature_pneg_act "Sh of triplets w a nature subject and potency negative"
+la var sh_hum_nat_ppos_act "Sh of triplets w a human subject, nature object, and potency positive"
+la var sh_hum_nat_pneg_act "Sh of triplets w a human subject, nature object, and potency negative"
+
+la var sh_nature_ppos_act_atl "Sh of motifs w at least one triplet w nature subject and positive potency"
+la var sh_nature_pneg_act_atl "Sh of motifs w at least one triplet w nature subject and negative potency"
+la var sh_hum_nat_ppos_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and positive potency"
+la var sh_hum_nat_pneg_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and negative potency"
+
+
 tempfile Motifs_EA_WESEE
 save `Motifs_EA_WESEE', replace 
 
@@ -424,7 +480,7 @@ gr close
 * FIXING CONVERSION FROM EA to ETHNOLOGUE (POSTCOLUMBIAN - Nunn & Giulianno, 2017)
 *
 *-------------------------------------------------------------------------------
-use "${data}/raw\ethnologue\ancestral_characteristics_database_language_level\Ancestral_Characteristics_Database_Language_Level\EthnoAtlas_Ethnologue16_extended_EE_Siberia_WES_by_language.dta", clear 
+use "${data}/raw\ethnologue\EthnoAtlas_Ethnologue16_extended_EE_Siberia_WES_by_language.dta", clear 
 
 *Fixing strings
 gen atlas=subinstr(v107,".","",.)
