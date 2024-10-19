@@ -355,6 +355,39 @@ la var sh_nature_human_acl "Share of triplets with any nature-human interaction"
 la var sh_nature_acl_motif_atleast "Share of motifs with at least one triplet with a nature subject or object"
 la var sh_nature_human_acl_motif_atl "Share of motifs with at least one triplet with any nature-human interaction"
 
+la var sh_nature_subj_nonexcl "Sh of triplets w a nature subject (non-excl)"
+la var sh_human_subj_nonexcl "Sh of triplets w a human subject (non-excl)"
+la var sh_nature_subj_excl "Sh of triplets w a nature subject (excl)"
+la var sh_human_subj_excl "Sh of triplets w a human subject (excl)"
+la var sh_nature_smotif_atleast_nonexcl "Sh of motifs w at least one nature subject in a triplet (non-excl)"
+la var sh_human_smotif_atleast_nonexcl "Sh of motifs w at least one human subject in a triplet (non-excl)"
+la var sh_nature_smotif_atleast_excl "Sh of motifs w at least one nature subject in a triplet (excl)"
+la var sh_human_smotif_atleast_excl "Sh of motifs w at least one human subject in a triplet (excl)"
+la var sh_nature_smotif_major_nonexcl "Sh of motifs in which nature subjects are greater than human (non-excl)"
+la var sh_nature_smotif_major_excl "Sh of motifs in which triplets w nature subjects are greater than human (excl)"
+la var sh_nature_obj_nonexcl "Sh of triplets w a nature object (non-excl)"
+la var sh_human_obj_nonexcl "Sh of triplets w a human object (non-excl)"
+la var sh_nature_obj_excl "Sh of triplets w a nature object (excl)"
+la var sh_human_obj_excl "Sh of triplets w a human object (excl)"
+la var sh_nature_omotif_atleast_nonexcl "Sh of motifs w at least one nature object in a triplet (non-excl)"
+la var sh_human_omotif_atleast_nonexcl "Sh of motifs w at least one human object in a triplet (non-excl)"
+la var sh_nature_omotif_atleast_excl "Sh of motifs w at least one nature object in a triplet (excl)"
+la var sh_human_omotif_atleast_excl "Sh of motifs w at least one human object in a triplet (excl)"
+la var sh_nature_omotif_major_nonexcl "Sh of motifs in which triplets w nature objects are greater than human (non-excl)"
+la var sh_nature_omotif_major_excl "Sh of motifs in which triplets w nature objects are greater than human (excl)"
+la var sh_nature_subj_human_obj "Sh of triplets w a nature subject and a human object (non-excl)"
+la var sh_human_subj_nature_obj "Sh of triplets w a human subject and a nature object (non-excl)"
+la var sh_natsubj_humobj_motif_atleast "Sh of motifs w at least one triplet w a nature subject and a human object"
+la var sh_humsubj_natobj_motif_atleast "Sh of motifs w at least one triplet w a human subject and a nature object"
+la var sh_natsubj_humobj_motif_major "Sh of motifs in which triplets w nature subject and human object are greater than the opposite"
+la var sh_nature_subj_human_obj_excl "Sh of triplets w a nature subject and a human object (excl)"
+la var sh_natsubj_humobj_motif_atl_excl "Sh of motifs w at least one triplet w a nature subject and a human object"
+la var sh_natsubj_humobj_motif_maj_excl "Sh of motifs in which triplets w nature subject and human object are greater than the opposite"
+la var sh_nature_acl "Sh of triplets w a nature subject or object"
+la var sh_nature_human_acl "Sh of triplets w any nature-human interaction"
+la var sh_nature_acl_motif_atleast "Sh of motifs w at least one triplet w a nature subject or object"
+la var sh_nature_human_acl_motif_atl "Sh of motifs w at least one triplet w any nature-human interaction"
+
 tempfile Motifs_EA_WESEE
 save `Motifs_EA_WESEE', replace 
 
@@ -405,6 +438,7 @@ merge m:1 atlas using `Motifs_EA_WESEE', keep(1 3) gen(merge_mea_wesee)		// 9 EA
 tab atlas if merge_mea==1
 drop merge_mea
 
+save "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.dta", replace
 export delimited "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.csv", replace
 
 

@@ -14,6 +14,12 @@ foreach var in nat_mean_p nat_mean_e nat_mean_a nat_sum_p nat_sum_e nat_sum_a na
 
 drop v1 
 
+foreach var in nat_mean_p nat_mean_e nat_mean_a nat_sum_p nat_sum_e nat_sum_a nat_n hum_mean_p hum_mean_e hum_mean_a hum_sum_p hum_sum_e hum_sum_a hum_n{
+	
+	gen d_`var'=(`var'>0) if `var'!=.
+	
+}
+
 tempfile ACT
 save `ACT', replace 
 
@@ -27,10 +33,21 @@ import delimited "${data}/interim\Motifs_EA_WESEE_groups_long.csv", encoding("ut
 merge m:1 motif_id using `ACT', keep(1 3) nogen 
 *c41 m11b (not found in the EA MOTIFS)
 
-collapse (mean) nat_mean_p nat_mean_e nat_mean_a nat_sum_p nat_sum_e nat_sum_a nat_n hum_mean_p hum_mean_e hum_mean_a hum_sum_p hum_sum_e hum_sum_a hum_n, by(atlas)
+ren share n_motifs
+
+collapse (sum) n_motifs d_* (mean) nat_mean_p nat_mean_e nat_mean_a nat_sum_p nat_sum_e nat_sum_a nat_n hum_mean_p hum_mean_e hum_mean_a hum_sum_p hum_sum_e hum_sum_a hum_n, by(atlas)
 
 egen m=rowmiss(nat_mean_p nat_mean_e nat_mean_a nat_sum_p nat_sum_e nat_sum_a nat_n hum_mean_p hum_mean_e hum_mean_a hum_sum_p hum_sum_e hum_sum_a hum_n) // 14 ethnicities with all missing 
 drop m 
+
+*Creating different measures regarding act
+foreach var in nat_mean_p nat_mean_e nat_mean_a nat_sum_p nat_sum_e nat_sum_a hum_mean_p hum_mean_e hum_mean_a hum_sum_p hum_sum_e hum_sum_a {
+	
+	gen sh_`var'=d_`var'/n_motifs 
+	
+}
+
+*NOTE: sum measures of potency are really similar to mean given the distribution
 
 tempfile ACT_Motifs_EA_WESEE
 save `ACT_Motifs_EA_WESEE', replace 
@@ -70,7 +87,38 @@ la var hum_sum_a "Total Activity score of the actions of all human entities"
 la var hum_sum_e "Total Evaluation score of the actions of all human entities"
 la var hum_n "Number of occurrences of human entities in the subject position within the folktale that were associated with a matchable verb"
 
+la var sh_nat_mean_p "Sh of motifs w average potency greater than zero for nature subjects"
+la var sh_nat_mean_a "Sh of motifs w average activity greater than zero for nature subjects"
+la var sh_nat_mean_e "Sh of motifs w average evaluation greater than zero for nature subjects"
+la var sh_nat_sum_p "Sh of motifs w total potency score greater than zero for nature subjects"
+la var sh_nat_sum_a "Sh of motifs w total activity score greater than zero for nature subjects"
+la var sh_nat_sum_e "Sh of motifs w total evaluation score greater than zero for nature subjects"
+la var sh_hum_mean_p  "Sh of motifs w average potency score greater than zero for human subjects"
+la var sh_hum_mean_a  "Sh of motifs w average activity score greater than zero for human subjects"
+la var sh_hum_mean_e  "Sh of motifs w average evaluation score greater than zero for human subjects"
+la var sh_hum_sum_p  "Sh of motifs w total potency score greater than zero for human subjects"
+la var sh_hum_sum_a  "Sh of motifs w total activity score greater than zero for human subjects"
+la var sh_hum_sum_e  "Sh of motifs w total evaluation score greater than zero for human subjects"
+
+save "${data}/interim\Motifs_EA_WESEE_Ethnologue_ACT.dta", replace
 export delimited "${data}/interim\Motifs_EA_WESEE_Ethnologue_ACT.csv", replace
+
+
+*-------------------------------------------------------------------------------
+* MERGING TO FOLKLORE DATA 
+*
+*-------------------------------------------------------------------------------
+use "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.dta", clear
+drop n_motifs -d_nature_human_acl
+
+merge 1:1 id using "${data}/interim\Motifs_EA_WESEE_Ethnologue_ACT.dta", gen(merge_act_final)
+
+drop d_nat_mean_p-d_hum_n
+
+save "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_allinfo.dta", replace
+
+
+
 
 
 
