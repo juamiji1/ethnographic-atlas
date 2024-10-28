@@ -440,12 +440,15 @@ la var sh_hum_nat_pneg_act "Sh of triplets w a human subject, nature object, and
 
 la var sh_nature_ppos_act_atl "Sh of motifs w at least one triplet w nature subject and positive potency"
 la var sh_nature_pneg_act_atl "Sh of motifs w at least one triplet w nature subject and negative potency"
-la var sh_hum_nat_ppos_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and positive potency"
-la var sh_hum_nat_pneg_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and negative potency"
+la var sh_hum_nat_ppos_act_atl "Sh of motifs w one triplet w human subj, nature obj, and positive potency"
+la var sh_hum_nat_pneg_act_atl "Sh of motifs w one triplet w human subj, nature obj, and negative potency"
 
+*la var sh_hum_nat_ppos_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and positive potency"
+*la var sh_hum_nat_pneg_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and negative potency"
 
 tempfile Motifs_EA_WESEE
 save `Motifs_EA_WESEE', replace 
+
 
 /*-------------------------------------------------------------------------------
 * Making correlation plots for Nathan between measures at the EA lvl
@@ -489,7 +492,7 @@ replace atlas=trim(atlas)
 keep id atlas v107
 keep if atlas!=""
 
-merge m:1 atlas using `Motifs_EA_WESEE', keep(1 3) gen(merge_mea_wesee)		// 9 EA groups not found in the ethnologue
+merge m:1 atlas using `Motifs_EA_WESEE', keep(1 2 3) gen(merge_mea_wesee)		// 9 EA groups not found in the ethnologue
 
 tab atlas if merge_mea==1
 drop merge_mea
