@@ -566,7 +566,7 @@ drop if v107=="TRISTAN ."
 gen atlas=subinstr(v107,".","",.)
 replace atlas=trim(atlas)
 
-keep atlas v107 v114
+keep atlas v107 v114 v91 v92 v93
 keep if atlas!=""
 
 *Merging the data together
@@ -584,7 +584,12 @@ foreach var in sh_nature_smotif_atleast_excl sh_human_smotif_atleast_excl{
 export delimited "${data}/interim\Motifs_EA_WESEE_humanvsnature_all.csv", replace
 
 
-
-
+preserve
+	keep atlas group_berezkin v91 v92 v93
+	order atlas group_berezkin v91 v92 v93
+	keep if v91=="E" & (v92=="a" | v92=="e" | v92=="f" | v92=="g" | v92=="h" | v92=="i" )
+	
+	export delimited "${data}/interim\Motifs_EA_WESEE_Bereskin_SA.csv", replace	
+restore 
 
 *END
