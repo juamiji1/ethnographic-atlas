@@ -237,12 +237,15 @@ preserve
 	*Looking at triplets where subjec=nature & object=human/manmade. 
 	gen nature_scl_human_ocl=1 if nature_scl==1 & (human_ocl==1 | manmade_ocl==1)
 	gen human_scl_nature_ocl=1 if human_scl==1 & nature_ocl==1 
+	gen nature_scl_or_ocl=1 if nature_scl==1 | nature_ocl==1 
 
-	collapse (sum) n_triplets_socl=obs_tag nature_scl_human_ocl human_scl_nature_ocl, by(motif_id)
+	collapse (sum) n_triplets_socl=obs_tag nature_scl_human_ocl human_scl_nature_ocl nature_scl_or_ocl, by(motif_id)
 
 	gen d_nature_scl_human_ocl=(nature_scl_human_ocl>0) if nature_scl_human_ocl!=.
 	gen d_human_scl_nature_ocl=(human_scl_nature_ocl>0) if human_scl_nature_ocl!=.
 	gen d_nature_scl_human_ocl_major=(nature_scl_human_ocl>human_scl_nature_ocl) if nature_scl_human_ocl!=. & human_scl_nature_ocl!=.
+	
+	gen d_nature_scl_or_ocl=(nature_scl_or_ocl>0) if nature_scl_or_ocl!=.
 
 	tempfile Triplets_socl
 	save `Triplets_socl', replace
@@ -372,6 +375,8 @@ gen sh_natsubj_humobj_motif_atleast=d_nature_scl_human_ocl/n_motifs
 gen sh_humsubj_natobj_motif_atleast=d_human_scl_nature_ocl/n_motifs
 gen sh_natsubj_humobj_motif_major=d_nature_scl_human_ocl_major/n_motifs
 
+gen sh_nature_any_motif_atl=d_nature_scl_or_ocl/n_motifs
+
 gen sh_nature_subj_human_obj_excl=nature_scl_human_ocl_excl/n_triplets_excl_socl
 gen sh_natsubj_humobj_motif_atl_excl=d_nature_scl_human_ocl_excl/n_motifs
 gen sh_natsubj_humobj_motif_maj_excl=d_nat_scl_hum_ocl_excl_major/n_motifs
@@ -430,6 +435,8 @@ la var sh_human_subj_nature_obj "Share of triplets with a human subject and a na
 la var sh_natsubj_humobj_motif_atleast "Share of motifs with at least one triplet with a nature subject and a human object"
 la var sh_humsubj_natobj_motif_atleast "Share of motifs with at least one triplet with a human subject and a nature object"
 la var sh_natsubj_humobj_motif_major "Share of motifs in which triplets with nature subject and human object are greater than the opposite"
+
+la var sh_nature_any_motif_atl "Sh of motifs w at least a nature subject or object in a triplet"
 
 la var sh_nature_subj_human_obj_excl "Share of triplets with a nature subject and a human object (Exclusive)"
 la var sh_natsubj_humobj_motif_atl_excl "Share of motifs with at least one triplet with a nature subject and a human object"
