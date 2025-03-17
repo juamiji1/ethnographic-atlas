@@ -546,8 +546,14 @@ use "${data}/raw\ethnologue\EthnoAtlas_Ethnologue16_extended_EE_Siberia_WES_by_l
 gen atlas=subinstr(v107,".","",.)
 replace atlas=trim(atlas)
 
-keep id atlas v107
+keep id atlas v107 v32 v33
 keep if atlas!=""
+
+label val v32 
+label val v33
+
+*Fixing the v32 variable
+recode v32 (2=1) (3=2) (4=3)
 
 merge m:1 atlas using `Motifs_EA_WESEE', keep(1 2 3) gen(merge_mea_wesee)		// 9 EA groups not found in the ethnologue
 

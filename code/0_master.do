@@ -11,7 +11,7 @@ clear all
 
 *Setting directories 
 if c(username) == "juami" {
-	gl localpath "C:\Users/`c(username)'\Dropbox\2-Folklore-Nathan-Project\EA-Maps-Nathan-project\Measures_work"
+	gl localpath "C:\Users/`c(username)'\Dropbox\RAships\2-Folklore-Nathan-Project\EA-Maps-Nathan-project\Measures_work"
 	*gl overleafpath "C:\Users/`c(username)'\Dropbox\Overleaf\GD-draft-slv"
 	gl do "C:\Github\ethnographic-atlas\code"
 	
