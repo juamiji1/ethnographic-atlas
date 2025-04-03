@@ -54,6 +54,9 @@ save `Oclass', replace
 * MERGING CLASSIFICATIONS WITH TRIPLETS 
 *
 *-------------------------------------------------------------------------------
+*ACT scores from Talha 
+import delimited "${data}/raw\ACT_measures\motif_epa_merge.csv", varnames(1) clear
+
 *Triplets from Oscar 
 import delimited "${data}/raw\ACT_measures\triplets_and_characterizations_unrolled_scores_merged.csv", varnames(1) clear
 *import delimited "${data}/raw\triplets_and_characterizations_unrolled.csv", varnames(1) clear 
