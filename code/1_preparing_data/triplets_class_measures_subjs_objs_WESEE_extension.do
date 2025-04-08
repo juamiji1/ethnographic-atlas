@@ -57,6 +57,11 @@ save `Oclass', replace
 *ACT scores from Talha 
 import delimited "${data}/raw\ACT_measures\motif_epa_merge.csv", varnames(1) clear
 
+ren term action
+
+tempfile EPAV2
+save `EPAV2', replace
+
 *Triplets from Oscar 
 import delimited "${data}/raw\ACT_measures\triplets_and_characterizations_unrolled_scores_merged.csv", varnames(1) clear
 *import delimited "${data}/raw\triplets_and_characterizations_unrolled.csv", varnames(1) clear 
@@ -66,6 +71,11 @@ gen original_subject=subject
 replace subject=strtrim(lower(subject))
 replace action=strtrim(lower(action))
 replace object=strtrim(lower(object))
+
+replace action=subinstr(action,"-"," ",.)
+
+*Merging EPA interpolation measures (Talha's)
+merge m:1 action motif_id using `EPAV2', keep(1 3) keepus(e_v2 p_v2 a_v2)
 
 *Checking duplicates that comes from same sentence-motif
 duplicates tag subject action object characterization sentence motif_id , g(dup)  //should I drop duplicates or each triplet means something different? different sentences?
@@ -93,7 +103,7 @@ merge m:1 subject using `Sclass', gen(merge_sclass)
 merge m:1 object using `Oclass', gen(merge_oclass)
 
 *Fixing ATC measures
-rename (e p a) (evaluation potency activity)
+rename (e p a e_v2 p_v2 a_v2) (evaluation potency activity evaluation_v2 potency_v2 activity_v2)
 destring evaluation potency activity, replace force
 
 *-------------------------------------------------------------------------------
@@ -282,41 +292,85 @@ restore
 *-------------------------------------------------------------------------------
 * Calculating ACT measures per motif (for SUBJECTS and OBJECTS)
 *-------------------------------------------------------------------------------
+preserve
+
+	*Where (1) subject is nature (2) potency is positive or negative
+	gen nature_ppos=1 if nature_scl==1 & potency>=0 & potency!=.
+	gen nature_pneg=1 if nature_scl==1 & potency<0
+
+	*Where (1) subject is nature (2) activity is positive or negative
+	gen nature_apos=1 if nature_scl==1 & activity>=0 & activity!=.
+	gen nature_aneg=1 if nature_scl==1 & activity<0
+
+	*Where (1) subject is nature (2) activity is positive or negative
+	gen nature_epos=1 if nature_scl==1 & evaluation>=0 & evaluation!=.
+	gen nature_eneg=1 if nature_scl==1 & evaluation<0
+
+	*Where (1) subject is human (2) nature is object, (3) potency is positive or negative
+	gen human_scl_nature_ocl_ppos=1 if human_scl==1 & nature_ocl==1 & potency>=0 & potency!=.
+	gen human_scl_nature_ocl_pneg=1 if human_scl==1 & nature_ocl==1 & potency<0
+
+	*keeping only triplets with some sort ofclassification 
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+
+	collapse (sum) n_triplets_act=obs_tag nature_ppos nature_pneg nature_apos nature_aneg nature_epos nature_eneg human_scl_nature_ocl_ppos human_scl_nature_ocl_pneg, by(motif_id)
+
+	gen d_nature_ppos=(nature_ppos>0) if nature_ppos!=.
+	gen d_nature_pneg=(nature_pneg>0) if nature_pneg!=.
+	gen d_nature_apos=(nature_apos>0) if nature_apos!=.
+	gen d_nature_aneg=(nature_aneg>0) if nature_aneg!=.
+	gen d_nature_epos=(nature_epos>0) if nature_epos!=.
+	gen d_nature_eneg=(nature_eneg>0) if nature_eneg!=.
+
+	gen d_nature_human_ppos=(human_scl_nature_ocl_ppos>0) if human_scl_nature_ocl_ppos!=.
+	gen d_nature_human_pneg=(human_scl_nature_ocl_pneg>0) if human_scl_nature_ocl_pneg!=.
+
+	tempfile Triplets_act
+	save `Triplets_act', replace
+
+restore
+
+*-------------------------------------------------------------------------------
+* Calculating ACT measures per motif (for SUBJECTS and OBJECTS) - VERSION 2 
+*-------------------------------------------------------------------------------
 *Where (1) subject is nature (2) potency is positive or negative
-gen nature_ppos=1 if nature_scl==1 & potency>=0 & potency!=.
-gen nature_pneg=1 if nature_scl==1 & potency<0
+gen nature_ppos_v2=1 if nature_scl==1 & potency_v2>=0 & potency_v2!=.
+gen nature_pneg_v2=1 if nature_scl==1 & potency_v2<0
 
 *Where (1) subject is nature (2) activity is positive or negative
-gen nature_apos=1 if nature_scl==1 & activity>=0 & activity!=.
-gen nature_aneg=1 if nature_scl==1 & activity<0
+gen nature_apos_v2=1 if nature_scl==1 & activity_v2>=0 & activity_v2!=.
+gen nature_aneg_v2=1 if nature_scl==1 & activity_v2<0
 
 *Where (1) subject is nature (2) activity is positive or negative
-gen nature_epos=1 if nature_scl==1 & evaluation>=0 & evaluation!=.
-gen nature_eneg=1 if nature_scl==1 & evaluation<0
+gen nature_epos_v2=1 if nature_scl==1 & evaluation_v2>=0 & evaluation_v2!=.
+gen nature_eneg_v2=1 if nature_scl==1 & evaluation_v2<0
 
 *Where (1) subject is human (2) nature is object, (3) potency is positive or negative
-gen human_scl_nature_ocl_ppos=1 if human_scl==1 & nature_ocl==1 & potency>=0 & potency!=.
-gen human_scl_nature_ocl_pneg=1 if human_scl==1 & nature_ocl==1 & potency<0
+gen human_scl_nature_ocl_ppos_v2=1 if human_scl==1 & nature_ocl==1 & potency_v2>=0 & potency_v2!=.
+gen human_scl_nature_ocl_pneg_v2=1 if human_scl==1 & nature_ocl==1 & potency_v2<0
 
 *keeping only triplets with some sort ofclassification 
 egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
 egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
 keep if (stotal!=0 | ototal!=0) & obs_tag==1
 
-collapse (sum) n_triplets_act=obs_tag nature_ppos nature_pneg nature_apos nature_aneg nature_epos nature_eneg human_scl_nature_ocl_ppos human_scl_nature_ocl_pneg, by(motif_id)
+collapse (sum) n_triplets_act=obs_tag nature_ppos* nature_pneg* nature_apos* nature_aneg* nature_epos* nature_eneg* human_scl_nature_ocl_ppos* human_scl_nature_ocl_pneg*, by(motif_id)
 
-gen d_nature_ppos=(nature_ppos>0) if nature_ppos!=.
-gen d_nature_pneg=(nature_pneg>0) if nature_pneg!=.
-gen d_nature_apos=(nature_apos>0) if nature_apos!=.
-gen d_nature_aneg=(nature_aneg>0) if nature_aneg!=.
-gen d_nature_epos=(nature_epos>0) if nature_epos!=.
-gen d_nature_eneg=(nature_eneg>0) if nature_eneg!=.
+gen d_nature_ppos_v2=(nature_ppos_v2>0) if nature_ppos_v2!=.
+gen d_nature_pneg_v2=(nature_pneg_v2>0) if nature_pneg_v2!=.
+gen d_nature_apos_v2=(nature_apos_v2>0) if nature_apos_v2!=.
+gen d_nature_aneg_v2=(nature_aneg_v2>0) if nature_aneg_v2!=.
+gen d_nature_epos_v2=(nature_epos_v2>0) if nature_epos_v2!=.
+gen d_nature_eneg_v2=(nature_eneg_v2>0) if nature_eneg_v2!=.
 
-gen d_nature_human_ppos=(human_scl_nature_ocl_ppos>0) if human_scl_nature_ocl_ppos!=.
-gen d_nature_human_pneg=(human_scl_nature_ocl_pneg>0) if human_scl_nature_ocl_pneg!=.
+gen d_nature_human_ppos_v2=(human_scl_nature_ocl_ppos_v2>0) if human_scl_nature_ocl_ppos_v2!=.
+gen d_nature_human_pneg_v2=(human_scl_nature_ocl_pneg_v2>0) if human_scl_nature_ocl_pneg_v2!=.
 
-tempfile Triplets_act
-save `Triplets_act', replace
+tempfile Triplets_act_v2
+save `Triplets_act_v2', replace
+
 
 *-------------------------------------------------------------------------------
 * MERGING TRIPLETS WITH MOTIFS-EA-WESEE CONVERSION DATA (Our Extension)
@@ -332,6 +386,7 @@ merge m:1 motif_id using `Triplets_socl', keep(1 3) gen(merge_triplet_socl)
 merge m:1 motif_id using `Triplets_excl_socl', keep(1 3) gen(merge_triplet_excl_socl)
 merge m:1 motif_id using `Triplets_acl', keep(1 3) gen(merge_triplet_acl)
 merge m:1 motif_id using `Triplets_act', keep(1 3) gen(merge_triplet_act)
+merge m:1 motif_id using `Triplets_act_v2', keep(1 3) gen(merge_triplet_act_v2)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
 
@@ -411,6 +466,17 @@ gen sh_nature_eneg_act_atl=d_nature_eneg/n_motifs
 
 gen sh_hum_nat_ppos_act_atl=d_nature_human_ppos/n_motifs
 gen sh_hum_nat_pneg_act_atl=d_nature_human_pneg/n_motifs
+
+*Creating V2 of ACT measures 
+gen sh_nature_ppos_act_atl_v2=d_nature_ppos_v2/n_motifs
+gen sh_nature_pneg_act_atl_v2=d_nature_pneg_v2/n_motifs
+gen sh_nature_apos_act_atl_v2=d_nature_apos_v2/n_motifs
+gen sh_nature_aneg_act_atl_v2=d_nature_aneg_v2/n_motifs
+gen sh_nature_epos_act_atl_v2=d_nature_epos_v2/n_motifs
+gen sh_nature_eneg_act_atl_v2=d_nature_eneg_v2/n_motifs
+
+gen sh_hum_nat_ppos_act_atl_v2=d_nature_human_ppos_v2/n_motifs
+gen sh_hum_nat_pneg_act_atl_v2=d_nature_human_pneg_v2/n_motifs
 
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
@@ -502,6 +568,17 @@ la var sh_nature_eneg_act_atl "Sh of motifs w at least one triplet w nature subj
 
 la var sh_hum_nat_ppos_act_atl "Sh of motifs w one triplet w human subj, nature obj, and positive potency"
 la var sh_hum_nat_pneg_act_atl "Sh of motifs w one triplet w human subj, nature obj, and negative potency"
+
+la var sh_nature_ppos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive potency (V2)"
+la var sh_nature_pneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative potency (V2)"
+la var sh_nature_apos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive activity (V2)"
+la var sh_nature_aneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative activity (V2)"
+la var sh_nature_epos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive evaluation (V2)"
+la var sh_nature_eneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative evaluation (V2)"
+
+la var sh_hum_nat_ppos_act_atl_v2 "Sh of motifs w one triplet w human subj, nature obj, and positive potency (V2)"
+la var sh_hum_nat_pneg_act_atl_v2 "Sh of motifs w one triplet w human subj, nature obj, and negative potency (V2)"
+
 
 *la var sh_hum_nat_ppos_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and positive potency"
 *la var sh_hum_nat_pneg_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and negative potency"
@@ -649,7 +726,6 @@ foreach var in sh_nature_smotif_atleast_excl sh_human_smotif_atleast_excl{
 
 export delimited "${data}/interim\Motifs_EA_WESEE_humanvsnature_all.csv", replace
 
-
 preserve
 	keep atlas group_berezkin v91 v92 v93
 	order atlas group_berezkin v91 v92 v93
@@ -657,5 +733,7 @@ preserve
 	
 	export delimited "${data}/interim\Motifs_EA_WESEE_Bereskin_SA.csv", replace	
 restore 
+
+
 
 *END
