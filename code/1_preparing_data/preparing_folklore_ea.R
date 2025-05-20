@@ -11,7 +11,9 @@ library(sf)
 set.seed("123")
 
 # change to your working directory here
-setwd("C:/Users/juami/Dropbox/EA-Maps-Nathan-project/oldra/")
+#setwd("C:/Users/juami/Dropbox/EA-Maps-Nathan-project/oldra/")
+
+setwd("C:/Users/juami/Dropbox/RAships/2-Folklore-Nathan-Project/EA-Maps-Nathan-project/Measures_work/oldra")
 
 
 #-------------------------------------------------------------------------------
@@ -109,8 +111,12 @@ motifs <- motifs %>%
 #-------------------------------------------------------------------------------  
 #groups <- read_dta("source/raw/folklore/data/Replication_Data_Folklore/Original_Files/Motifs_Berezkin_groups.dta") %>% 
 #  dplyr::select(group_Berezkin, a1:n9)
-groups <- read_dta("source/raw/folklore/data/Replication_Data_Folklore/Original_Files/Motifs_EA_groups.dta") %>% 
-  dplyr::select(atlas, group_Berezkin, a1:n9)
+
+#groups <- read_dta("source/raw/folklore/data/Replication_Data_Folklore/Original_Files/Motifs_EA_groups.dta") %>% 
+#  dplyr::select(atlas, group_Berezkin, a1:n9)
+
+groups <- read_dta("C:/Users/juami/Dropbox/RAships/2-Folklore-Nathan-Project/EA-Maps-Nathan-project/Measures_work/data/interim/Motifs_EA_WESEE_groups.dta") %>% 
+    dplyr::select(atlas, group_Berezkin, a1:n9)
 
 #Fixing the BRAZILIAN's Berezkin group (Replacing with the PORTUGUES info)
 source_row <- which(groups$atlas == "PORTUGUES")  
@@ -171,7 +177,7 @@ groups_motifs <- groups_motifs %>%
   filter(!is.na(share))
 
 #For later use
-write.csv(groups_motifs, "C:/Users/juami/Dropbox/EA-Maps-Nathan-project/data/interim/Motifs_EA_groups_long.csv", row.names=FALSE)
+#write.csv(groups_motifs, "C:/Users/juami/Dropbox/EA-Maps-Nathan-project/data/interim/Motifs_EA_groups_long.csv", row.names=FALSE)
 
 #-------------------------------------------------------------------------------
 # Preparing groups and motifs together 
@@ -226,7 +232,7 @@ groups_motifs_coll <- groups_motifs_coll %>%
                 .names = '{col}_med'))
 
 
-write.csv(groups_motifs_coll, "C:/Users/juami/Dropbox/EA-Maps-Nathan-project/data/interim/folklore_ea_nature.csv", row.names=FALSE)
+write.csv(groups_motifs_coll, "C:/Users/juami/Dropbox/RAships/2-Folklore-Nathan-Project/EA-Maps-Nathan-project/Measures_work/data/interim/folklore_ea_nature.csv", row.names=FALSE)
 
 
 

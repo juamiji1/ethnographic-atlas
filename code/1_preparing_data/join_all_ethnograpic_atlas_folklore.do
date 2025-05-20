@@ -3,7 +3,7 @@ import delimited "${data}/interim\folklore_ea_nature.csv", clear
 tempfile FOLK
 save `FOLK', replace
 
-use "${data}/raw\ethnographic_atlas\ethnographic_atlas_fixed.dta", clear 
+import delimited "${data}/raw\ethnographic_atlas\ethnographic_atlas_east_siberia_wes_vfinal.csv", clear 
 
 *Fixing strings
 gen atlas=subinstr(v107,".","",.)
@@ -26,8 +26,10 @@ foreach var of varlist motif_all-ancesplusgod_sh_med{
 
 replace group_berezkin="Portuguese" if atlas=="BRAZILIAN"
 
+keep v107 ancestor_sh
+
 *Export data
-export delimited using "${data}/interim\ethnographic_atlas_fixed_folklore.csv", replace 
+export delimited using "${data}/interim\EA_folklore_ancestor_sh.csv", replace 
 
 
 
