@@ -710,13 +710,13 @@ use "${data}/raw\ethnologue\EthnoAtlas_Ethnologue16_extended_EE_Siberia_WES_by_l
 gen atlas=subinstr(v107,".","",.)
 replace atlas=trim(atlas)
 
-keep id atlas v107 v32 v33 v34 v66 v114 nam_label
 keep if atlas!=""
 
-label val v32 
-label val v33 
-label val v34 
-label val v66
+foreach var in v112-v90 v94-v97 {
+	cap nois la val `var'
+}
+
+keep id atlas v107 v32 v33 v34 v66 v114 nam_label
 
 *Fixing the v32 variable
 recode v32 (2=1) (3=2) (4=3)
