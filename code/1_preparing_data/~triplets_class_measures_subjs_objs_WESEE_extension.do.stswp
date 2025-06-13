@@ -786,6 +786,7 @@ foreach var of varlist v1-v90 {
 	forval c=1/8{
 		replace `var'=`var'_clust`c' if `var'==0 | `var'==.
 	}
+
 	
 }
 
