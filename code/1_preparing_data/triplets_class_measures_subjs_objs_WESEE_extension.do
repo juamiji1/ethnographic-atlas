@@ -750,6 +750,12 @@ drop if v107=="HAITIANS."
 drop if v107=="TRISTAN ."
 drop if v107=="FRENCHCAN"
 
+*Fixing some categories for maps
+replace v54=. if v54>6
+
+gen d_v66=1 if v66==1
+replace d_v66=0 if v66>1 & v66!=.
+
 tempfile EA_VFINAL
 save `EA_VFINAL', replace
 
@@ -762,7 +768,9 @@ forval c=1/8{
 	
 	preserve
 		import delimited using "${data}/interim\ethnographic_atlas_east_siberia_wes_vfinal_ethnclusters.csv", clear
-
+		
+		replace v114_order=v114_corrected if v114_corrected!=.
+		
 		keep if v114_order==`c'
 		merge 1:1 v107 using `EA_VFINAL', keep(1 3) nogen
 
@@ -853,13 +861,13 @@ foreach var in v112-v90 v94-v97 {
 	cap nois la val `var'
 }
 
-keep id atlas v107 v32 v33 v34 v66 v114 nam_label
+keep id atlas v107 v32 v33 v34 v66 v54 v114 nam_label
 
 *Fixing the v32 variable
 recode v32 (2=1) (3=2) (4=3)
 
 *Fixing the values for Portuguese and Afrikaans
-foreach var in v32 v33 v34 v66 {
+foreach var in v32 v33 v34 v54 v66 {
 	
 	gen x=`var' if id=="POR-BRA"
 	bys v114: egen mean_x=mean(x)
@@ -870,7 +878,7 @@ foreach var in v32 v33 v34 v66 {
 	
 }
 
-foreach var in v32 v33 v34 v66 {
+foreach var in v32 v33 v34 v54 v66 {
 	
 	gen x=`var' if atlas=="DUTCH"
 	egen mean_x=mean(x)
@@ -886,6 +894,13 @@ merge m:1 atlas using `ANCES', keep(1 3) nogen
 
 tab atlas if merge_mea==1
 drop merge_mea
+
+*Fixing some categories for maps
+replace v54=. if v54>6
+
+gen d_v66=1 if v66==1
+replace d_v66=0 if v66>1 & v66!=.
+
 
 save "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.dta", replace
 export delimited "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.csv", replace
