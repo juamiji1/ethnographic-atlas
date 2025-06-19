@@ -753,8 +753,8 @@ drop if v107=="FRENCHCAN"
 *Fixing some categories for maps
 replace v54=. if v54>6
 
-gen d_v66=1 if v66==1
-replace d_v66=0 if v66>1 & v66!=.
+gen d_v66=1 if v66>1 & v66!=.
+replace d_v66=0 if v66==1
 
 tempfile EA_VFINAL
 save `EA_VFINAL', replace
@@ -898,8 +898,8 @@ drop merge_mea
 *Fixing some categories for maps
 replace v54=. if v54>6
 
-gen d_v66=1 if v66==1
-replace d_v66=0 if v66>1 & v66!=.
+gen d_v66=1 if v66>1 & v66!=.
+replace d_v66=0 if v66==1
 
 
 save "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.dta", replace
