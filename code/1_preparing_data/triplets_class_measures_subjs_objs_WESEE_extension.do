@@ -861,7 +861,7 @@ foreach var in v112-v90 v94-v97 {
 	cap nois la val `var'
 }
 
-keep id atlas v107 v32 v33 v34 v66 v54 v114 nam_label
+keep id atlas v107 v32 v33 v34 v66 v54 v114 nam_label c1
 
 *Fixing the v32 variable
 recode v32 (2=1) (3=2) (4=3)
