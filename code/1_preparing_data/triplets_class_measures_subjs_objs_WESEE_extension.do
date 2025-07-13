@@ -865,13 +865,13 @@ foreach var in v112-v90 v94-v97 {
 	cap nois la val `var'
 }
 
-keep id atlas v107 v32 v33 v34 v66 v54 v114 nam_label c1
+keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1
 
 *Fixing the v32 variable
 recode v32 (2=1) (3=2) (4=3)
 
 *Fixing the values for Portuguese and Afrikaans
-foreach var in v32 v33 v34 v54 v66 {
+foreach var in v30 v31 v32 v33 v34 v54 v66 {
 	
 	gen x=`var' if id=="POR-BRA"
 	bys v114: egen mean_x=mean(x)
@@ -882,7 +882,7 @@ foreach var in v32 v33 v34 v54 v66 {
 	
 }
 
-foreach var in v32 v33 v34 v54 v66 {
+foreach var in v30 v31 v32 v33 v34 v54 v66 {
 	
 	gen x=`var' if atlas=="DUTCH"
 	egen mean_x=mean(x)
@@ -891,6 +891,17 @@ foreach var in v32 v33 v34 v54 v66 {
 	
 	drop x mean_x
 	
+}
+
+*Fixing the missing values
+recode v30 v31 (0=.)
+	
+foreach var in v30 v31 {
+	
+	bys v114: egen x = mean(`var')
+	replace `var'= x if `var'==.
+	replace `var'=ceil(`var')
+	drop x
 }
 
 merge m:1 atlas using `Motifs_EA_WESEE', keep(1 2 3) gen(merge_mea_wesee)		// 9 EA groups not found in the ethnologue
