@@ -865,7 +865,19 @@ foreach var in v112-v90 v94-v97 {
 	cap nois la val `var'
 }
 
-keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1
+forval c=1/8{
+	merge m:1 v114 using `EA_CLUST`c'', keep(1 3) nogen 
+}
+
+foreach var of varlist v6-v90 v95 v102 {
+	
+	forval c=1/8{
+		replace `var'=`var'_clust`c' if `var'==0 | `var'==.
+	}
+	
+}
+
+keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1 v1 v2 v3 v4 v5 v102 v95
 
 *Fixing the v32 variable
 recode v32 (2=1) (3=2) (4=3)
@@ -894,9 +906,9 @@ foreach var in v30 v31 v32 v33 v34 v54 v66 {
 }
 
 *Fixing the missing values
-recode v30 v31 (0=.)
+recode v30 v31 v95 (0=.)
 	
-foreach var in v30 v31 {
+foreach var in v30 v31 v95 {
 	
 	bys v114: egen x = mean(`var')
 	replace `var'= x if `var'==.
@@ -904,6 +916,12 @@ foreach var in v30 v31 {
 	drop x
 }
 
+/*egen x = mean(v95) // IMPROVE THIS VARIABLE!!! (ASK NATHAN)
+replace x = ceil(x)
+replace v95= x if v95==.
+drop x
+*/
+	
 merge m:1 atlas using `Motifs_EA_WESEE', keep(1 2 3) gen(merge_mea_wesee)		// 9 EA groups not found in the ethnologue
 merge m:1 atlas using `ANCES', keep(1 3) nogen
 
