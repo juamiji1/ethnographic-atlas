@@ -499,7 +499,7 @@ gen sh_natsubj_humobj_motif_maj_excl=d_nat_scl_hum_ocl_excl_major/n_motifs
 gen sh_nature_acl=nature_acl/n_triplets_acl
 gen sh_nature_human_acl=nature_human_acl/n_triplets_acl
 
-gen sh_nature_acl_motif_atleast=d_nature_acl/n_motifs
+gen sh_nature_acl_motif_atleast=d_nature_acl/n_motifs 	// same as sh_nature_any_motif_atl
 gen sh_nature_human_acl_motif_atl=d_nature_human_acl/n_motifs
 
 *Creating special act measures
@@ -663,7 +663,7 @@ la var sh_hum_nat_pneg_act_atl_v3 "Sh of motifs w one triplet w human subj, natu
 tempfile Motifs_EA_WESEE
 save `Motifs_EA_WESEE', replace 
 
-
+END
 /*-------------------------------------------------------------------------------
 * Making correlation plots for Nathan between measures at the EA lvl
 *
