@@ -184,7 +184,7 @@ gr export "${plots}\coefplot_folknature_hii_X2.pdf", as(pdf) replace
 *GHG
 coefplot g*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-xtitle("Green House Gas (Std)", size(medsmall)) ylabel(,labsize(small))  ///
+xtitle("Green House Gases (Std)", size(medsmall)) ylabel(,labsize(small))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2)
 
 gr export "${plots}\coefplot_folknature_ghg_X2.pdf", as(pdf) replace 
@@ -192,7 +192,7 @@ gr export "${plots}\coefplot_folknature_ghg_X2.pdf", as(pdf) replace
 *Water loss
 coefplot w*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-xtitle("Permanent Water Area (Std)", size(medsmall)) ylabel(,labsize(small))  ///
+xtitle("Water Loss Area (Std)", size(medsmall)) ylabel(,labsize(small))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) 
 
 gr export "${plots}\coefplot_folknature_waterloss_X2.pdf", as(pdf) replace
