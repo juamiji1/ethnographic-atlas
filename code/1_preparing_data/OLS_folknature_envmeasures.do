@@ -113,17 +113,20 @@ foreach yvar of global depvar {
 	egen std_`yvar'= std(`yvar')
 }
  
+replace std_sh_losswater=-std_sh_losswater
+replace std_hii=-std_hii
+
 cap drop z_env
-pca std_sh_protected std_bii std_sh_treecover std_sh_losswater std_ghg, comp(1)
+pca std_sh_protected std_bii std_sh_treecover std_sh_losswater, comp(1)
 predict z_env, score
 
 *Labels
 la var sh_nature_any_motif_atl `" "Share of motifs with any" "nature subject or object" "'
 la var sh_nature_smotif_atleast_nonexcl `" "Share of motifs with a" "nature subject" "'
 la var sh_nature_omotif_atleast_nonexcl `" "Share of motifs with a" "nature object" "'
-la var sh_nature_scl_maj_ocl_motif_atl `" "Share of motifs with nature" "subjects greater than" "nature objects" "'
-la var sh_nature_smotif_major_nonexcl `" "Share of motifs with nature" "subjects greater than" "human subjects" "'
-la var sh_nature_human_acl_motif_atl `" "Share of motifs with any" "nature-human interaction" "'
+// la var sh_nature_scl_maj_ocl_motif_atl `" "Share of motifs with nature" "subjects greater than" "nature objects" "'
+// la var sh_nature_smotif_major_nonexcl `" "Share of motifs with nature" "subjects greater than" "human subjects" "'
+// la var sh_nature_human_acl_motif_atl `" "Share of motifs with any" "nature-human interaction" "'
 
 *-------------------------------------------------------------------------------
 * Results 
@@ -131,8 +134,9 @@ la var sh_nature_human_acl_motif_atl `" "Share of motifs with any" "nature-human
 *-------------------------------------------------------------------------------
 eststo clear
 
-gl indepvar "sh_nature_any_motif_atl sh_nature_smotif_atleast_nonexcl sh_nature_omotif_atleast_nonexcl sh_nature_scl_maj_ocl_motif_atl sh_nature_smotif_major_nonexcl sh_nature_human_acl_motif_atl"
-gl X "i.v30 i.v66 v102 v5 v3 v2 i.v95 area_km2 nl_mean"
+*gl indepvar "sh_nature_any_motif_atl sh_nature_smotif_atleast_nonexcl sh_nature_omotif_atleast_nonexcl sh_nature_scl_maj_ocl_motif_atl sh_nature_smotif_major_nonexcl sh_nature_human_acl_motif_atl"
+gl indepvar "sh_nature_any_motif_atl sh_nature_smotif_atleast_nonexcl sh_nature_omotif_atleast_nonexcl"
+gl X "i.v30 i.v66 v102 v5 v3 v2 i.v95 area_km2 nl_mean hii"
 *i.v31 too many missings (50%)
 
 local i=1
@@ -150,7 +154,7 @@ foreach xvar of global indepvar {
 } 
 
 * Protected area 
-coefplot p*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
+coefplot p*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
 xtitle("Protected Area (Std)", size(medsmall)) ylabel(,labsize(small))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2)
@@ -158,7 +162,7 @@ mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b
 gr export "${plots}\coefplot_folknature_sh_protected_X2.pdf", as(pdf) replace 
 
 *Biodiversity intactness
-coefplot b*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
+coefplot b*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
 xtitle("Biodiversity Intactness (Std)", size(medsmall)) ylabel(,labsize(small))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) 
@@ -166,37 +170,40 @@ mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b
 gr export "${plots}\coefplot_folknature_bii_X2.pdf", as(pdf) replace 
 
 *Tree cover 
-coefplot c*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
+coefplot c*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
 xtitle("Forest Cover (Std)", size(medsmall)) ylabel(,labsize(small))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2)
 
 gr export "${plots}\coefplot_folknature_sh_treecover_X2.pdf", as(pdf) replace 
 
-*HII 
-coefplot h*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
-ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-xtitle("Human Impact Index (Std)", size(medsmall)) ylabel(,labsize(small))  ///
-mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) 
-
-gr export "${plots}\coefplot_folknature_hii_X2.pdf", as(pdf) replace 
-
-*GHG
-coefplot g*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
-ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-xtitle("Green House Gases (Std)", size(medsmall)) ylabel(,labsize(small))  ///
-mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2)
-
-gr export "${plots}\coefplot_folknature_ghg_X2.pdf", as(pdf) replace 
+// *HII 
+// coefplot h*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
+// ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+// xtitle("Human Impact Index (Std)", size(medsmall)) ylabel(,labsize(small))  ///
+// mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) 
+//
+// gr export "${plots}\coefplot_folknature_hii_X2.pdf", as(pdf) replace 
+//
+// *GHG
+// coefplot g*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
+// ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+// xtitle("Green House Gases (Std)", size(medsmall)) ylabel(,labsize(small))  ///
+// mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2)
+//
+// gr export "${plots}\coefplot_folknature_ghg_X2.pdf", as(pdf) replace 
 
 *Water loss
-coefplot w*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
+coefplot w*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
 xtitle("Water Loss Area (Std)", size(medsmall)) ylabel(,labsize(small))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) 
 
 gr export "${plots}\coefplot_folknature_waterloss_X2.pdf", as(pdf) replace
 
+eststo clear
+
+local i=1
 *z_env index
 foreach xvar of global indepvar {
 	
@@ -205,7 +212,7 @@ foreach xvar of global indepvar {
 	local i=`i'+1
 } 
 
-coefplot z*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95) ///
+coefplot z*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
 xtitle("Environmental Index (Std)", size(medsmall)) ylabel(,labsize(small))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2)
