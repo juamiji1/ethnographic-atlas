@@ -28,7 +28,9 @@ gl plots "${localpath}\plots"
 cd "${data}"
 
 *Setting a pre-scheme for plots
+set scheme s2mono
 grstyle init
 grstyle title color black
 grstyle color background white
 grstyle color major_grid dimgray
+

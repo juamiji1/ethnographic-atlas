@@ -1,0 +1,24 @@
+name: geo_clean
+channels:
+  - conda-forge
+channel_priority: strict
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - xarray
+  - rioxarray
+  - geopandas
+  - matplotlib
+  - mapclassify
+  - rapidfuzz
+  - shapely
+  - rasterio
+  - rasterstats
+  - netcdf4
+  - h5netcdf
+  - cftime
+  - pyproj
+  - fiona
+  - gdal
+  - ipykernel
