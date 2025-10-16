@@ -1,3 +1,4 @@
+gl plots "C:\Users\juami\Dropbox\Overleaf\Nathan-Maps\plots"
 
 *-------------------------------------------------------------------------------
 * Preparing data
@@ -106,7 +107,7 @@ encode isocode, gen(isocode_num)
 
 drop if area_km2==. 
 
-gl depvar "sh_protected bii sh_treecover ghg sh_losswater hii sh_treeloss"
+gl depvar "sh_protected bii sh_treecover ghg sh_losswater hii sh_treeloss changewater"
 
 foreach yvar of global depvar {
 	cap drop std_`yvar'
@@ -117,49 +118,194 @@ replace std_sh_losswater=-std_sh_losswater
 replace std_hii=-std_hii
 
 cap drop z_env
-pca std_bii std_sh_treecover std_sh_losswater, comp(1)
+pca std_bii std_sh_treecover std_changewater, comp(1)
 predict z_env, score
+
+mat L=e(L)
+mat rown L = "BII" "Tree Cover" "Water Persistence"
+mat coln L = "Loadings"
+mat l L
 
 *Labels
 la var sh_nature_any_motif_atl `" "Share of motifs with any" "nature subject or object" "'
 la var sh_nature_smotif_atleast_nonexcl `" "Share of motifs with a" "nature subject" "'
 la var sh_nature_omotif_atleast_nonexcl `" "Share of motifs with a" "nature object" "'
-// la var sh_nature_scl_maj_ocl_motif_atl `" "Share of motifs with nature" "subjects greater than" "nature objects" "'
-// la var sh_nature_smotif_major_nonexcl `" "Share of motifs with nature" "subjects greater than" "human subjects" "'
-// la var sh_nature_human_acl_motif_atl `" "Share of motifs with any" "nature-human interaction" "'
+
 
 *-------------------------------------------------------------------------------
-* Results 
+* Results
 *
+*-------------------------------------------------------------------------------
+*-------------------------------------------------------------------------------
+* OLS no controls
 *-------------------------------------------------------------------------------
 eststo clear
 
-*gl indepvar "sh_nature_any_motif_atl sh_nature_smotif_atleast_nonexcl sh_nature_omotif_atleast_nonexcl sh_nature_scl_maj_ocl_motif_atl sh_nature_smotif_major_nonexcl sh_nature_human_acl_motif_atl"
-gl indepvar "sh_nature_any_motif_atl sh_nature_smotif_atleast_nonexcl sh_nature_omotif_atleast_nonexcl"
-gl X "i.v30 i.v66 v102 v5 v3 v2 i.v95 area_km2 hii sh_protected"
-*i.v31 too many missings (50%)
+gl indepvar `" "sh_nature_any_motif_atl" "sh_nature_smotif_atleast_nonexcl sh_nature_omotif_atleast_nonexcl""'
+gl X0 " "
 
 local i=1
-
 foreach xvar of global indepvar {
 		
-	eststo p`i': reghdfe std_sh_protected `xvar' ${X}, abs(i.isocode_num) vce(r)		
-	eststo b`i': reghdfe std_bii `xvar' ${X}, abs(i.isocode_num) vce(r)	
-	eststo c`i': reghdfe std_sh_treecover `xvar' ${X}, abs(i.isocode_num) vce(r)	
-	eststo w`i': reghdfe std_sh_losswater `xvar' ${X}, abs(i.isocode_num) vce(r)
+	eststo z`i': reghdfe z_env `xvar' ${X0}, abs(i.country_code) vce(r)					
+	eststo b`i': reghdfe std_bii `xvar' ${X0}, abs(i.country_code) vce(r)	
+	eststo c`i': reghdfe std_sh_treecover `xvar' ${X0}, abs(i.country_code) vce(r)	
+	eststo w`i': reghdfe std_changewater `xvar' ${X0}, abs(i.country_code) vce(r)
+	
 	local i=`i'+1
-} 
+}
 
-* Protected area 
-coefplot p*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii sh_protected) ///
+*Environmental Index
+coefplot z*, drop(_cons) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-xtitle("Protected Area (Std)", size(medium)) ylabel(,labsize(medium))  ///
-mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
+xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) xscale(range(-.1 1.2)) xlabel(0(0.2)1.2) 
 
-gr export "${plots}\coefplot_folknature_sh_protected_X2.pdf", as(pdf) replace 
+gr export "${plots}\coefplot_folknature_z_env_X0.pdf", as(pdf) replace 
 
 *Biodiversity intactness
-coefplot b*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii sh_protected) ///
+coefplot b*, drop(_cons) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Biodiversity Intactness (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) 
+
+gr export "${plots}\coefplot_folknature_bii_X0.pdf", as(pdf) replace 
+
+*Tree cover 
+coefplot c*, drop(_cons) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Forest Cover (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) xscale(range(-.1 1)) xlabel(0(0.2)1)
+
+gr export "${plots}\coefplot_folknature_sh_treecover_X0.pdf", as(pdf) replace 
+
+*Water loss
+coefplot w*, drop(_cons) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Water Persistence (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) 
+
+gr export "${plots}\coefplot_folknature_waterloss_X0.pdf", as(pdf) replace
+
+*-------------------------------------------------------------------------------
+* AES without Controls
+*-------------------------------------------------------------------------------
+cap drop country_code_*
+tab country_code, g(country_code_)
+
+gl X0 "country_code_*"
+	
+cap drop sh_nat_smotif_atleast sh_nat_omotif_atleast
+gen sh_nat_smotif_atleast=sh_nature_smotif_atleast_nonexcl
+gen sh_nat_omotif_atleast=sh_nature_omotif_atleast_nonexcl
+
+eststo aes1: avg_effect std_bii std_sh_treecover std_changewater, x(${X0} sh_nature_any_motif_atl) effectvar(sh_nature_any_motif_atl) controltest(z_env!=.) r
+eststo aes2: avg_effect std_bii std_sh_treecover std_changewater, x(${X0} sh_nat_smotif_atleast sh_nat_omotif_atleast) effectvar(sh_nat_smotif_atleast sh_nat_omotif_atleast) controltest(z_env!=.) r
+
+coefplot aes*, drop(_cons ${X0}) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Average Effect (Std)", size(medium)) ylabel(1 `" "Share of motifs with any" "nature subject or object" "' ///
+2 `" "Share of motifs with a" "nature subject" "' 3 `" "Share of motifs with a" "nature object" "',labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) xscale(range(-.1 1.2)) xlabel(0(0.2)1.2) 
+
+gr export "${plots}\coefplot_folknature_aes_X0.pdf", as(pdf) replace
+
+*-------------------------------------------------------------------------------
+* OLS with HII control
+*-------------------------------------------------------------------------------
+eststo clear
+
+gl indepvar `" "sh_nature_any_motif_atl" "sh_nature_smotif_atleast_nonexcl sh_nature_omotif_atleast_nonexcl""'
+gl X1 "hii"
+
+local i=1
+foreach xvar of global indepvar {
+		
+	eststo z`i': reghdfe z_env `xvar' ${X1}, abs(i.country_code) vce(r)
+	eststo b`i': reghdfe std_bii `xvar' ${X1}, abs(i.country_code) vce(r)	
+	eststo c`i': reghdfe std_sh_treecover `xvar' ${X1}, abs(i.country_code) vce(r)	
+	eststo w`i': reghdfe std_changewater `xvar' ${X1}, abs(i.country_code) vce(r)
+		
+	local i=`i'+1
+}
+
+*Environmental Index
+coefplot z*, drop(_cons ${X1}) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
+
+gr export "${plots}\coefplot_folknature_z_env_X1.pdf", as(pdf) replace 
+
+*Biodiversity intactness
+coefplot b*, drop(_cons ${X1}) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Biodiversity Intactness (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) 
+
+gr export "${plots}\coefplot_folknature_bii_X1.pdf", as(pdf) replace 
+
+*Tree cover 
+coefplot c*, drop(_cons ${X1}) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Forest Cover (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) xscale(range(-.1 1)) xlabel(0(0.2)1)
+
+gr export "${plots}\coefplot_folknature_sh_treecover_X1.pdf", as(pdf) replace 
+
+*Water loss
+coefplot w*, drop(_cons ${X1}) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Water Persistence (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) 
+
+gr export "${plots}\coefplot_folknature_waterloss_X1.pdf", as(pdf) replace
+
+*-------------------------------------------------------------------------------
+* AES with Controls
+*-------------------------------------------------------------------------------
+gl X1 "country_code_* hii"
+
+eststo aes1: avg_effect std_bii std_sh_treecover std_changewater, x(${X1} sh_nature_any_motif_atl) effectvar(sh_nature_any_motif_atl) controltest(z_env!=.) r
+eststo aes2: avg_effect std_bii std_sh_treecover std_changewater, x(${X1} sh_nat_smotif_atleast sh_nat_omotif_atleast) effectvar(sh_nat_smotif_atleast sh_nat_omotif_atleast) controltest(z_env!=.) r
+
+coefplot aes*, drop(_cons ${X1}) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Average Effect (Std)", size(medium)) ylabel(1 `" "Share of motifs with any" "nature subject or object" "' ///
+2 `" "Share of motifs with a" "nature subject" "' 3 `" "Share of motifs with a" "nature object" "',labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) xscale(range(-.1 1.2)) xlabel(0(0.2)1.2) 
+
+gr export "${plots}\coefplot_folknature_aes_X1.pdf", as(pdf) replace
+
+*-------------------------------------------------------------------------------
+* OLS with ALL controls
+*-------------------------------------------------------------------------------
+eststo clear
+
+gl indepvar `" "sh_nature_any_motif_atl" "sh_nature_smotif_atleast_nonexcl sh_nature_omotif_atleast_nonexcl""'
+gl X2 "i.v30 i.v66 v102 v5 v3 v2 i.v95 area_km2 hii"
+
+local i=1
+foreach xvar of global indepvar {
+		
+	eststo z`i': reghdfe z_env `xvar' ${X2}, abs(i.country_code) vce(r)					
+	eststo b`i': reghdfe std_bii `xvar' ${X2}, abs(i.country_code) vce(r)	
+	eststo c`i': reghdfe std_sh_treecover `xvar' ${X2}, abs(i.country_code) vce(r)	
+	eststo w`i': reghdfe std_changewater `xvar' ${X2}, abs(i.country_code) vce(r)
+	
+	local i=`i'+1
+}
+
+*Environmental Index
+coefplot z*, drop(_cons *.v30 *.v66 v102 v5 v3 v2 *.v95 area_km2 hii) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
+
+gr export "${plots}\coefplot_folknature_z_env_X2.pdf", as(pdf) replace 
+
+*Biodiversity intactness
+coefplot b*, drop(_cons *.v30 *.v66 v102 v5 v3 v2 *.v95 area_km2 hii) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
 xtitle("Biodiversity Intactness (Std)", size(medium)) ylabel(,labsize(medium))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) 
@@ -167,77 +313,34 @@ mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b
 gr export "${plots}\coefplot_folknature_bii_X2.pdf", as(pdf) replace 
 
 *Tree cover 
-coefplot c*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii sh_protected) ///
+coefplot c*, drop(_cons *.v30 *.v66 v102 v5 v3 v2 *.v95 area_km2 hii) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
 xtitle("Forest Cover (Std)", size(medium)) ylabel(,labsize(medium))  ///
-mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) xscale(range(-.1 1)) xlabel(0(0.2)1)
 
 gr export "${plots}\coefplot_folknature_sh_treecover_X2.pdf", as(pdf) replace 
 
-// *HII 
-// coefplot h*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
-// ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-// xtitle("Human Impact Index (Std)", size(medsmall)) ylabel(,labsize(small))  ///
-// mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) 
-//
-// gr export "${plots}\coefplot_folknature_hii_X2.pdf", as(pdf) replace 
-//
-// *GHG
-// coefplot g*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii) ///
-// ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-// xtitle("Green House Gases (Std)", size(medsmall)) ylabel(,labsize(small))  ///
-// mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2)
-//
-// gr export "${plots}\coefplot_folknature_ghg_X2.pdf", as(pdf) replace 
-
 *Water loss
-coefplot w*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii sh_protected) ///
+coefplot w*, drop(_cons *.v30 *.v66 v102 v5 v3 v2 *.v95 area_km2 hii) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-xtitle("Water Loss Area (Std)", size(medium)) ylabel(,labsize(medium))  ///
+xtitle("Water Persistence (Std)", size(medium)) ylabel(,labsize(medium))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) 
 
 gr export "${plots}\coefplot_folknature_waterloss_X2.pdf", as(pdf) replace
 
-eststo clear
-
-local i=1
-*z_env index
-foreach xvar of global indepvar {
-	
-	eststo z`i': reghdfe z_env `xvar' ${X}, abs(i.country_code) vce(r)		
-	
-	local i=`i'+1
-} 
-
-coefplot z*, drop(_cons *.v30 *.v31 nl_mean v1 v4 v2 v3 v5 *.v66 v102 *.KG_code area_km2 *.v95 *hii sh_protected) ///
-ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
-xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
-mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
-
-gr export "${plots}\coefplot_folknature_z_env_X2.pdf", as(pdf) replace
-
 *-------------------------------------------------------------------------------
-* AES
+* AES with ALL Controls
 *-------------------------------------------------------------------------------
-gl X "v30_* v66_* v102 v5 v3 v2 v95_* area_km2 nl_mean hii sh_protected country_code_*"
-
-foreach xvar in v30 v66 v95 country_code{
+foreach xvar in v30 v66 v95{
 	tab `xvar', g(`xvar'_)
 }
 
-eststo aes1: avg_effect std_bii std_sh_treecover std_sh_losswater, x(${X} sh_nature_any_motif_atl) effectvar(sh_nature_any_motif_atl) controltest(z_env!=.) r
+gl X2 "v30_* v66_* v102 v5 v3 v2 v95_* area_km2 hii country_code_*"
 
-cap drop sh_nat_smotif_atleast
-gen sh_nat_smotif_atleast=sh_nature_smotif_atleast_nonexcl
+eststo aes1: avg_effect std_bii std_sh_treecover std_changewater, x(${X2} sh_nature_any_motif_atl) effectvar(sh_nature_any_motif_atl) controltest(z_env!=.) r
+eststo aes2: avg_effect std_bii std_sh_treecover std_changewater, x(${X2} sh_nat_smotif_atleast sh_nat_omotif_atleast) effectvar(sh_nat_smotif_atleast sh_nat_omotif_atleast) controltest(z_env!=.) r
 
-eststo aes2: avg_effect std_bii std_sh_treecover std_sh_losswater, x(${X} sh_nat_smotif_atleast) effectvar(sh_nat_smotif_atleast) controltest(z_env!=.) r
-
-cap drop sh_nat_omotif_atleast
-gen sh_nat_omotif_atleast=sh_nature_omotif_atleast_nonexcl
-
-eststo aes3: avg_effect std_bii std_sh_treecover std_sh_losswater, x(${X} sh_nat_omotif_atleast) effectvar(sh_nat_omotif_atleast) controltest(z_env!=.) 
-
-coefplot aes*, drop(_cons v30_* v66_* v102 v5 v3 v2 v95_* area_km2 nl_mean hii sh_protected country_code_*) ///
+coefplot aes*, drop(_cons ${X2}) ///
 ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
 xtitle("Average Effect (Std)", size(medium)) ylabel(1 `" "Share of motifs with any" "nature subject or object" "' ///
 2 `" "Share of motifs with a" "nature subject" "' 3 `" "Share of motifs with a" "nature object" "',labsize(medium))  ///
@@ -245,7 +348,14 @@ mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b
 
 gr export "${plots}\coefplot_folknature_aes_X2.pdf", as(pdf) replace
 
-*-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+/*-------------------------------------------------------------------------------
 * Weights
 *-------------------------------------------------------------------------------
 eststo clear
