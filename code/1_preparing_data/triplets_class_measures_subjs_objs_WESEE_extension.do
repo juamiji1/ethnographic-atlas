@@ -663,7 +663,7 @@ la var sh_hum_nat_pneg_act_atl_v3 "Sh of motifs w one triplet w human subj, natu
 tempfile Motifs_EA_WESEE
 save `Motifs_EA_WESEE', replace 
 
-END
+
 /*-------------------------------------------------------------------------------
 * Making correlation plots for Nathan between measures at the EA lvl
 *
@@ -793,7 +793,7 @@ forval c=1/8{
 	merge m:1 v114 using `EA_CLUST`c'', keep(1 3) nogen 
 }
 
-foreach var of varlist v1-v90 {
+foreach var of varlist v1-v90 v95 v96 {
 	
 	forval c=1/8{
 		replace `var'=`var'_clust`c' if `var'==0 | `var'==.
@@ -869,7 +869,7 @@ forval c=1/8{
 	merge m:1 v114 using `EA_CLUST`c'', keep(1 3) nogen 
 }
 
-foreach var of varlist v6-v90 v95 v102 {
+foreach var of varlist v6-v90 v95 v96 v102 {
 	
 	forval c=1/8{
 		replace `var'=`var'_clust`c' if `var'==0 | `var'==.
@@ -877,7 +877,7 @@ foreach var of varlist v6-v90 v95 v102 {
 	
 }
 
-keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1 v1 v2 v3 v4 v5 v102 v95
+keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1 v1 v2 v3 v4 v5 v102 v95 v96
 
 *Fixing the v32 variable
 recode v32 (2=1) (3=2) (4=3)
@@ -906,13 +906,15 @@ foreach var in v30 v31 v32 v33 v34 v54 v66 {
 }
 
 *Fixing the missing values
-recode v30 v31 v95 (0=.)
+recode v30 v31 v95 v96 (0=.)
+
+replace v95=v96 if v95==.
 	
 foreach var in v30 v31 v95 {
 	
-	bys v114: egen x = mean(`var')
+	bys v114: egen x = mode(`var'), max
 	replace `var'= x if `var'==.
-	replace `var'=ceil(`var')
+	*replace `var'=ceil(`var')
 	drop x
 }
 
