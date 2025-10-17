@@ -117,9 +117,9 @@ foreach yvar of global depvar {
 replace std_sh_losswater=-std_sh_losswater
 replace std_hii=-std_hii
 
-cap drop z_env
-pca std_bii std_sh_treecover std_changewater, comp(1)
-predict z_env, score
+cap drop z_env z_env2
+pca std_bii std_sh_treecover std_changewater, comp(2)
+predict z_env z_env2, score
 
 mat L=e(L)
 mat rown L = "BII" "Tree Cover" "Water Persistence"
@@ -137,7 +137,7 @@ tab country_code, g(country_code_)
 
 gl countrycodes "country_code_1 country_code_2 country_code_3 country_code_6 country_code_9 country_code_10 country_code_12 country_code_13 country_code_14 country_code_16 country_code_17 country_code_20 country_code_21 country_code_22 country_code_24 country_code_25 country_code_26 country_code_27 country_code_28 country_code_30 country_code_31 country_code_32 country_code_34 country_code_35 country_code_36 country_code_39 country_code_40 country_code_41 country_code_42 country_code_43 country_code_44 country_code_45 country_code_46 country_code_47 country_code_48 country_code_51 country_code_52 country_code_53 country_code_55 country_code_56 country_code_57 country_code_58 country_code_59 country_code_60 country_code_61 country_code_62 country_code_63 country_code_65 country_code_67 country_code_68 country_code_70 country_code_71 country_code_72 country_code_73 country_code_74 country_code_75 country_code_76 country_code_83 country_code_84 country_code_85 country_code_86 country_code_88 country_code_89 country_code_91 country_code_92 country_code_93 country_code_94 country_code_96 country_code_97 country_code_99 country_code_100 country_code_101 country_code_102 country_code_106 country_code_107 country_code_108 country_code_109 country_code_111 country_code_112 country_code_113 country_code_115 country_code_118 country_code_119 country_code_120 country_code_122 country_code_126 country_code_129 country_code_130 country_code_131 country_code_133 country_code_136 country_code_137 country_code_138 country_code_139 country_code_141 country_code_142 country_code_143 country_code_144 country_code_146 country_code_147 country_code_148 country_code_151 country_code_152 country_code_153 country_code_154 country_code_155 country_code_157 country_code_158 country_code_159 country_code_160 country_code_161 country_code_163 country_code_164 country_code_168 country_code_169 country_code_178 country_code_179 country_code_180 country_code_181 country_code_183 country_code_184 country_code_185 country_code_187 country_code_188 country_code_189 country_code_191 country_code_192 country_code_193 country_code_195 country_code_196 country_code_197 country_code_198 country_code_199 country_code_200 country_code_201 country_code_202 country_code_204 country_code_205 country_code_206 country_code_207 country_code_208 country_code_210 country_code_211 country_code_212 country_code_213 country_code_214 country_code_215 country_code_218 country_code_219 country_code_220 country_code_221 country_code_222 country_code_223 country_code_224 country_code_225 country_code_226"
 
-
+END
 *-------------------------------------------------------------------------------
 * Results
 *
@@ -154,7 +154,8 @@ gl if " "
 local i=1
 foreach xvar of global indepvar {
 		
-	eststo z`i': reghdfe z_env `xvar' ${X0} ${if}, abs(i.country_code) vce(r)					
+	eststo z`i': reghdfe z_env `xvar' ${X0} ${if}, abs(i.country_code) vce(r)		
+	eststo k`i': reghdfe z_env2 `xvar' ${X0} ${if}, abs(i.country_code) vce(r)					
 	eststo b`i': reghdfe std_bii `xvar' ${X0} ${if}, abs(i.country_code) vce(r)	
 	eststo c`i': reghdfe std_sh_treecover `xvar' ${X0} ${if}, abs(i.country_code) vce(r)	
 	eststo w`i': reghdfe std_changewater `xvar' ${X0} ${if}, abs(i.country_code) vce(r)
@@ -169,6 +170,14 @@ xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) xscale(range(-.1 1.2)) xlabel(0(0.2)1.2) 
 
 gr export "${plots}\coefplot_folknature_z_env_X0.pdf", as(pdf) replace 
+
+*Environmental Index
+coefplot k*, drop(_cons) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall) xscale(range(-.1 1.2)) xlabel(0(0.2)1.2) 
+
+gr export "${plots}\coefplot_folknature_z_env2_X0.pdf", as(pdf) replace 
 
 *Biodiversity intactness
 coefplot b*, drop(_cons) ///
@@ -226,6 +235,7 @@ local i=1
 foreach xvar of global indepvar {
 		
 	eststo z`i': reghdfe z_env `xvar' ${X1} ${if}, abs(i.country_code) vce(r)
+	eststo k`i': reghdfe z_env2 `xvar' ${X1} ${if}, abs(i.country_code) vce(r)
 	eststo b`i': reghdfe std_bii `xvar' ${X1} ${if}, abs(i.country_code) vce(r)	
 	eststo c`i': reghdfe std_sh_treecover `xvar' ${X1} ${if}, abs(i.country_code) vce(r)	
 	eststo w`i': reghdfe std_changewater `xvar' ${X1} ${if}, abs(i.country_code) vce(r)
@@ -240,6 +250,14 @@ xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
 
 gr export "${plots}\coefplot_folknature_z_env_X1.pdf", as(pdf) replace 
+
+*Environmental Index
+coefplot k*, drop(_cons ${X1}) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
+
+gr export "${plots}\coefplot_folknature_z_env2_X1.pdf", as(pdf) replace 
 
 *Biodiversity intactness
 coefplot b*, drop(_cons ${X1}) ///
@@ -291,8 +309,9 @@ gl X2 "i.v30 i.v66 v102 v5 v3 v2 i.v95 area_km2 hii"
 
 local i=1
 foreach xvar of global indepvar {
-		
-	eststo z`i': reghdfe z_env `xvar' ${X2} ${if}, abs(i.country_code) vce(r)					
+	
+	eststo z`i': reghdfe z_env `xvar' ${X2} ${if}, abs(i.country_code) vce(r)			
+	eststo k`i': reghdfe z_env2 `xvar' ${X2} ${if}, abs(i.country_code) vce(r)					
 	eststo b`i': reghdfe std_bii `xvar' ${X2} ${if}, abs(i.country_code) vce(r)	
 	eststo c`i': reghdfe std_sh_treecover `xvar' ${X2} ${if}, abs(i.country_code) vce(r)	
 	eststo w`i': reghdfe std_changewater `xvar' ${X2} ${if}, abs(i.country_code) vce(r)
@@ -307,6 +326,14 @@ xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
 mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
 
 gr export "${plots}\coefplot_folknature_z_env_X2.pdf", as(pdf) replace 
+
+*Environmental Index
+coefplot k*, drop(_cons *.v30 *.v66 v102 v5 v3 v2 *.v95 area_km2 hii) ///
+ciopts(recast(rcap)) xline(0, lc(maroon) lp(dash)) legend(off) ///
+xtitle("Environmental Index (Std)", size(medium)) ylabel(,labsize(medium))  ///
+mlabel(cond(@pval<=.01, string(@b, "%9.3fc") + "***", cond(@pval<=.05, string(@b, "%9.3fc") + "**", cond(@pval<=.1, string(@b, "%9.3fc") + "*", cond(@pval<=.15, string(@b, "%9.3fc") + "†", string(@b, "%9.3fc")))))) mlabposition(12) mlabgap(*2) mlabsize(medsmall)
+
+gr export "${plots}\coefplot_folknature_z_env2_X2.pdf", as(pdf) replace 
 
 *Biodiversity intactness
 coefplot b*, drop(_cons *.v30 *.v66 v102 v5 v3 v2 *.v95 area_km2 hii) ///
