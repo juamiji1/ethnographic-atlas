@@ -160,42 +160,42 @@ eststo aes0: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X0} 
 qui reghdfe z_env ${X1_int} ${X0} ${if}, noabs vce(r)
 qui summ z_env if e(sample), d 
 gl meany0 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd0    = "`=string(round(r(sd), .01), "%9.4f")'"
+gl sd0    = "`=string(round(r(sd), .0001), "%9.4f")'"
 gl n0 = "`r(N)'"
 
 eststo aes1: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X1} ${X1_int}) effectvar(${X1_int}) controltest(z_env!=.) r
 qui reghdfe z_env ${X1_int} ${X1} ${if}, noabs vce(r)
 qui summ z_env if e(sample), d 
 gl meany1 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd1    = "`=string(round(r(sd), .01), "%9.4f")'"
+gl sd1    = "`=string(round(r(sd), .0001), "%9.4f")'"
 gl n1 = "`r(N)'"
 
 eststo aes2: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X2} ${X1_int}) effectvar(${X1_int}) controltest(z_env!=.) r
 qui reghdfe z_env ${X1_int} ${X2} ${if}, noabs vce(r)
 qui summ z_env if e(sample), d 
 gl meany2 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd2    = "`=string(round(r(sd), .01), "%9.4f")'"
+gl sd2    = "`=string(round(r(sd), .0001), "%9.4f")'"
 gl n2 = "`r(N)'"
 
 eststo aes3: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X0} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
 qui reghdfe z_env ${X2_int} ${X0} ${if}, noabs vce(r)
 qui summ z_env if e(sample), d 
 gl meany3 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd3    = "`=string(round(r(sd), .01), "%9.4f")'"
+gl sd3    = "`=string(round(r(sd), .0001), "%9.4f")'"
 gl n3 = "`r(N)'"
 
 eststo aes4: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X1} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
 qui reghdfe z_env ${X2_int} ${X1} ${if}, noabs vce(r)
 qui summ z_env if e(sample), d 
 gl meany4 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd4    = "`=string(round(r(sd), .01), "%9.4f")'"
+gl sd4    = "`=string(round(r(sd), .0001), "%9.4f")'"
 gl n4 = "`r(N)'"
 
 eststo aes5: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X2} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
 qui reghdfe z_env ${X2_int} ${X2} ${if}, noabs vce(r)
 qui summ z_env if e(sample), d 
 gl meany5 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd5    = "`=string(round(r(sd), .01), "%9.4f")'"
+gl sd5    = "`=string(round(r(sd), .0001), "%9.4f")'"
 gl n5 = "`r(N)'"
 
 *-------------------------------------------------------------------------------
