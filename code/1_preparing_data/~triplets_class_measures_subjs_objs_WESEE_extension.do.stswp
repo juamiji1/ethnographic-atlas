@@ -652,10 +652,10 @@ la var sh_nature_aneg_act_atl "Sh of motifs w at least one triplet w nature subj
 la var sh_nature_epos_act_atl "Sh of motifs w at least one triplet w nature subject and positive evaluation"
 la var sh_nature_eneg_act_atl "Sh of motifs w at least one triplet w nature subject and negative evaluation"
 
-la var sh_nature_ppos_act_oatl "Sh of motifs w at least one triplet w nature object and positive potency"
-la var sh_nature_pneg_act_oatl "Sh of motifs w at least one triplet w nature object and negative potency"
-la var sh_nature_epos_act_oatl "Sh of motifs w at least one triplet w nature object and positive evaluation"
-la var sh_nature_eneg_act_oatl "Sh of motifs w at least one triplet w nature object and negative evaluation"
+la var sh_nature_ppos_act_atl "Sh of motifs w at least one triplet w nature subject and positive potency"
+la var sh_nature_pneg_act_atl "Sh of motifs w at least one triplet w nature subject and negative potency"
+la var sh_nature_epos_act_atl "Sh of motifs w at least one triplet w nature subject and positive evaluation"
+la var sh_nature_eneg_act_atl "Sh of motifs w at least one triplet w nature subject and negative evaluation"
 
 la var sh_hum_nat_ppos_act_atl "Sh of motifs w one triplet w human subj, nature obj, and positive potency"
 la var sh_hum_nat_pneg_act_atl "Sh of motifs w one triplet w human subj, nature obj, and negative potency"

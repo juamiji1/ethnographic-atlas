@@ -233,8 +233,8 @@ esttab aes0 aes1 aes2 aes3 aes4 aes5 using "${tables}/Table_folklore_z_env.tex",
 * Results Potency
 *
 *-------------------------------------------------------------------------------
-gl X1_int "sh_nature_ppos_act_atl sh_nature_pneg_act_atl"
-gl X2_int "sh_nature_epos_act_atl sh_nature_eneg_act_atl"
+gl X1_int "sh_nature_ppos_act_oatl sh_nature_pneg_act_oatl"
+gl X2_int "sh_nature_epos_act_oatl sh_nature_eneg_act_oatl"
 
 gl X3_int "sh_nature_ppos_act_atl sh_nature_pneg_act_atl sh_nature_ppos_act_oatl sh_nature_pneg_act_oatl"
 gl X4_int "sh_nature_epos_act_atl sh_nature_eneg_act_atl sh_nature_epos_act_oatl sh_nature_eneg_act_oatl"
@@ -289,7 +289,6 @@ qui summ z_env if e(sample), d
 gl meany5 = "`=string(round(r(mean), .0001), "%9.4f")'"
 gl sd5    = "`=string(round(r(sd), .0001), "%9.4f")'"
 gl n5 = "`r(N)'"
-
 *-------------------------------------------------------------------------------
 * Tables
 *-------------------------------------------------------------------------------
