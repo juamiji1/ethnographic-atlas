@@ -141,6 +141,8 @@ la var sh_nat_smotif_atleast `" "Share of motifs with a" "nature subject" "'
 la var sh_nat_omotif_atleast `" "Share of motifs with a" "nature object" "'
 
 
+save "${data}/interim/folklore_envmeasures.dta", replace
+
 END
 *-------------------------------------------------------------------------------
 * Results 

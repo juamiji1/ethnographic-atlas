@@ -347,6 +347,9 @@ preserve
 
 restore
 
+*-------------------------------------------------------------------------------
+* Calculating ACT measures per motif (for SUBJECTS and OBJECTS) USING MEDIAN 
+*-------------------------------------------------------------------------------
 preserve
 	
 	summ potency, d 
@@ -400,44 +403,141 @@ preserve
 restore
 
 *-------------------------------------------------------------------------------
-* Calculating ACT measures per motif (for SUBJECTS and OBJECTS) - VERSION 3 
+* Calculating ACT measures per motif (for SUBJECTS and OBJECTS) - VERSION 2
 *-------------------------------------------------------------------------------
-*Where (1) subject is nature (2) potency is positive or negative
-gen nature_ppos_v2=1 if nature_scl==1 & potency_v2>=0 & potency_v2!=.
-gen nature_pneg_v2=1 if nature_scl==1 & potency_v2<0
+preserve
 
-*Where (1) subject is nature (2) activity is positive or negative
-gen nature_apos_v2=1 if nature_scl==1 & activity_v2>=0 & activity_v2!=.
-gen nature_aneg_v2=1 if nature_scl==1 & activity_v2<0
+	*Where (1) subject is nature (2) potency is positive or negative
+	gen nature_ppos_v2=1 if nature_scl==1 & potency_v2>=0 & potency_v2!=.
+	gen nature_pneg_v2=1 if nature_scl==1 & potency_v2<0
 
-*Where (1) subject is nature (2) activity is positive or negative
-gen nature_epos_v2=1 if nature_scl==1 & evaluation_v2>=0 & evaluation_v2!=.
-gen nature_eneg_v2=1 if nature_scl==1 & evaluation_v2<0
+	*Where (1) subject is nature (2) activity is positive or negative
+	gen nature_apos_v2=1 if nature_scl==1 & activity_v2>=0 & activity_v2!=.
+	gen nature_aneg_v2=1 if nature_scl==1 & activity_v2<0
 
-*Where (1) subject is human (2) nature is object, (3) potency is positive or negative
-gen human_scl_nature_ocl_ppos_v2=1 if human_scl==1 & nature_ocl==1 & potency_v2>=0 & potency_v2!=.
-gen human_scl_nature_ocl_pneg_v2=1 if human_scl==1 & nature_ocl==1 & potency_v2<0
+	*Where (1) subject is nature (2) activity is positive or negative
+	gen nature_epos_v2=1 if nature_scl==1 & evaluation_v2>=0 & evaluation_v2!=.
+	gen nature_eneg_v2=1 if nature_scl==1 & evaluation_v2<0
 
-*keeping only triplets with some sort ofclassification 
-egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
-egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
-keep if (stotal!=0 | ototal!=0) & obs_tag==1
+	*Where (1) subject is human (2) nature is object, (3) potency is positive or negative
+	gen human_scl_nature_ocl_ppos_v2=1 if human_scl==1 & nature_ocl==1 & potency_v2>=0 & potency_v2!=.
+	gen human_scl_nature_ocl_pneg_v2=1 if human_scl==1 & nature_ocl==1 & potency_v2<0
 
-collapse (sum) n_triplets_act=obs_tag nature_ppos* nature_pneg* nature_apos* nature_aneg* nature_epos* nature_eneg* human_scl_nature_ocl_ppos* human_scl_nature_ocl_pneg*, by(motif_id)
+	*keeping only triplets with some sort ofclassification 
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
 
-gen d_nature_ppos_v2=(nature_ppos_v2>0) if nature_ppos_v2!=.
-gen d_nature_pneg_v2=(nature_pneg_v2>0) if nature_pneg_v2!=.
-gen d_nature_apos_v2=(nature_apos_v2>0) if nature_apos_v2!=.
-gen d_nature_aneg_v2=(nature_aneg_v2>0) if nature_aneg_v2!=.
-gen d_nature_epos_v2=(nature_epos_v2>0) if nature_epos_v2!=.
-gen d_nature_eneg_v2=(nature_eneg_v2>0) if nature_eneg_v2!=.
+	collapse (sum) n_triplets_act=obs_tag nature_ppos* nature_pneg* nature_apos* nature_aneg* nature_epos* nature_eneg* human_scl_nature_ocl_ppos* human_scl_nature_ocl_pneg*, by(motif_id)
 
-gen d_nature_human_ppos_v2=(human_scl_nature_ocl_ppos_v2>0) if human_scl_nature_ocl_ppos_v2!=.
-gen d_nature_human_pneg_v2=(human_scl_nature_ocl_pneg_v2>0) if human_scl_nature_ocl_pneg_v2!=.
+	gen d_nature_ppos_v2=(nature_ppos_v2>0) if nature_ppos_v2!=.
+	gen d_nature_pneg_v2=(nature_pneg_v2>0) if nature_pneg_v2!=.
+	gen d_nature_apos_v2=(nature_apos_v2>0) if nature_apos_v2!=.
+	gen d_nature_aneg_v2=(nature_aneg_v2>0) if nature_aneg_v2!=.
+	gen d_nature_epos_v2=(nature_epos_v2>0) if nature_epos_v2!=.
+	gen d_nature_eneg_v2=(nature_eneg_v2>0) if nature_eneg_v2!=.
 
-tempfile Triplets_act_v2
-save `Triplets_act_v2', replace
+	gen d_nature_human_ppos_v2=(human_scl_nature_ocl_ppos_v2>0) if human_scl_nature_ocl_ppos_v2!=.
+	gen d_nature_human_pneg_v2=(human_scl_nature_ocl_pneg_v2>0) if human_scl_nature_ocl_pneg_v2!=.
 
+	tempfile Triplets_act_v2
+	save `Triplets_act_v2', replace
+	
+restore 
+
+*-------------------------------------------------------------------------------
+* Calculating ACT measures per motif (for SUBJECTS and OBJECTS) USING MEDIAN 
+*-------------------------------------------------------------------------------
+preserve
+	
+	summ potency_v2, d 
+	gen pospotency=1 if potency_v2>=`r(p50)' & potency_v2!=.
+	replace pospotency=0 if potency_v2<`r(p50)'
+	
+	summ activity_v2, d 
+	gen posactivity=1 if activity_v2>=`r(p50)' & activity_v2!=.
+	replace posactivity=0 if activity_v2<`r(p50)'
+	
+	summ evaluation_v2, d 
+	gen posevaluation_v2=1 if evaluation_v2>=`r(p50)' & evaluation_v2!=.
+	replace posevaluation=0 if evaluation_v2<`r(p50)'
+	
+	*Where (1) subject is nature (2) potency is positive or negative
+	gen nature_ppos_v4=1 if nature_scl==1 & pospotency==1
+	gen nature_pneg_v4=1 if nature_scl==1 & pospotency==0
+
+	*Where (1) subject is nature (2) activity is positive or negative
+	gen nature_apos_v4=1 if nature_scl==1 & posactivity==1
+	gen nature_aneg_v4=1 if nature_scl==1 & posactivity==0
+
+	*Where (1) subject is nature (2) activity is positive or negative
+	gen nature_epos_v4=1 if nature_scl==1 & posevaluation==1
+	gen nature_eneg_v4=1 if nature_scl==1 & posevaluation==0
+
+	*Where (1) subject is human (2) nature is object, (3) potency is positive or negative
+	gen human_scl_nature_ocl_ppos_v4=1 if human_scl==1 & nature_ocl==1 & pospotency==1
+	gen human_scl_nature_ocl_pneg_v4=1 if human_scl==1 & nature_ocl==1 & pospotency==0
+
+	*keeping only triplets with some sort ofclassification 
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+
+	collapse (sum) n_triplets_act=obs_tag nature_ppos nature_pneg nature_apos nature_aneg nature_epos nature_eneg human_scl_nature_ocl_ppos human_scl_nature_ocl_pneg, by(motif_id)
+
+	gen d_nature_ppos_v4=(nature_ppos_v4>0) if nature_ppos_v4!=.
+	gen d_nature_pneg_v4=(nature_pneg_v4>0) if nature_pneg_v4!=.
+	gen d_nature_apos_v4=(nature_apos_v4>0) if nature_apos_v4!=.
+	gen d_nature_aneg_v4=(nature_aneg_v4>0) if nature_aneg_v4!=.
+	gen d_nature_epos_v4=(nature_epos_v4>0) if nature_epos_v4!=.
+	gen d_nature_eneg_v4=(nature_eneg_v4>0) if nature_eneg_v4!=.
+
+	gen d_nature_human_ppos_v4=(human_scl_nature_ocl_ppos_v4>0) if human_scl_nature_ocl_ppos_v4!=.
+	gen d_nature_human_pneg_v4=(human_scl_nature_ocl_pneg_v4>0) if human_scl_nature_ocl_pneg_v4!=.
+
+	tempfile Triplets_act_v4
+	save `Triplets_act_v4', replace
+
+restore
+
+*-------------------------------------------------------------------------------
+* Calculating KILL measures per motif (for SUBJECTS and OBJECTS) 
+*-------------------------------------------------------------------------------
+preserve
+
+	gen kill = regexm(lower(sentence), ///
+		"\b(kill|killed|killing|murder|murdered|murdering|slay|slain|slaying|assassinate|assassinated|execute|executed|executing|destroy|destroyed|destroying)\b")
+
+	gen nature_scl_kill=1 if nature_scl==1 & kill==1
+	gen nature_ocl_kill=1 if nature_ocl==1 & kill==1
+
+	gen human_scl_kill=1 if (human_scl==1 | manmade_scl==1) & kill==1
+	gen human_ocl_kill=1 if human_ocl==1 & kill==1
+	
+	gen nature_scl_human_ocl_kill=1 if nature_scl==1 & human_ocl==1 & kill==1		
+	gen human_scl_nature_ocl_kill=1 if (human_scl==1 | manmade_scl==1) & nature_ocl==1 & kill==1
+
+	*keeping only triplets with some sort ofclassification 
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+
+	collapse (sum) n_triplets_act=obs_tag kill nature_scl_kill nature_ocl_kill human_scl_kill human_ocl_kill human_scl_nature_ocl_kill nature_scl_human_ocl_kill, by(motif_id)
+
+	gen d_kill=(kill>0) if kill!=.
+	gen d_nature_scl_kill=(nature_scl_kill>0) if nature_scl_kill!=.
+	gen d_nature_ocl_kill=(nature_ocl_kill>0) if nature_ocl_kill!=.
+
+	gen d_human_scl_kill=(human_scl_kill>0) if human_scl_kill!=.
+	gen d_human_ocl_kill=(human_ocl_kill>0) if human_ocl_kill!=.
+	
+	gen d_nature_scl_human_ocl_kill=(nature_scl_human_ocl_kill>0) if nature_scl_human_ocl_kill!=.
+	gen d_human_scl_nature_ocl_kill=(human_scl_nature_ocl_kill>0) if human_scl_nature_ocl_kill!=.
+
+	tempfile Triplets_kill
+	save `Triplets_kill', replace
+
+restore 
 
 *-------------------------------------------------------------------------------
 * MERGING TRIPLETS WITH MOTIFS-EA-WESEE CONVERSION DATA (Our Extension)
@@ -455,12 +555,14 @@ merge m:1 motif_id using `Triplets_acl', keep(1 3) gen(merge_triplet_acl)
 merge m:1 motif_id using `Triplets_act', keep(1 3) gen(merge_triplet_act)
 merge m:1 motif_id using `Triplets_act_v2', keep(1 3) gen(merge_triplet_act_v2)
 merge m:1 motif_id using `Triplets_act_v3', keep(1 3) gen(merge_triplet_act_v3)
+merge m:1 motif_id using `Triplets_act_v4', keep(1 3) gen(merge_triplet_act_v4)
+merge m:1 motif_id using `Triplets_kill', keep(1 3) gen(merge_triplet_kill)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
 
 ren share n_motifs
 
-collapse (sum) n_motifs n_triplets* human* nature* d_human* d_nat* d_super* super*, by(atlas group_berezkin)
+collapse (sum) n_motifs n_triplets* human* nature* d_human* d_nat* d_super* super* d_kill*, by(atlas group_berezkin)
 
 *Creating different measures regarding subject
 gen sh_human_subj_nonexcl=human_scl/n_triplets_scl
@@ -563,6 +665,26 @@ gen sh_nature_eneg_act_atl_v3=d_nature_eneg_v3/n_motifs
 gen sh_hum_nat_ppos_act_atl_v3=d_nature_human_ppos_v3/n_motifs
 gen sh_hum_nat_pneg_act_atl_v3=d_nature_human_pneg_v3/n_motifs
 
+*Creating V3 of ACT measures 
+gen sh_nature_ppos_act_atl_v4=d_nature_ppos_v4/n_motifs
+gen sh_nature_pneg_act_atl_v4=d_nature_pneg_v4/n_motifs
+gen sh_nature_apos_act_atl_v4=d_nature_apos_v4/n_motifs
+gen sh_nature_aneg_act_atl_v4=d_nature_aneg_v4/n_motifs
+gen sh_nature_epos_act_atl_v4=d_nature_epos_v4/n_motifs
+gen sh_nature_eneg_act_atl_v4=d_nature_eneg_v4/n_motifs
+
+gen sh_hum_nat_ppos_act_atl_v4=d_nature_human_ppos_v4/n_motifs
+gen sh_hum_nat_pneg_act_atl_v4=d_nature_human_pneg_v4/n_motifs
+
+*Creating measures related to kill 
+gen sh_kill_atl=d_kill/n_motifs
+gen sh_nature_scl_kill_atl=d_nature_scl_kill/n_motifs
+gen sh_nature_ocl_kill_atl=d_nature_ocl_kill/n_motifs
+gen sh_human_scl_kill_atl=d_human_scl_kill/n_motifs
+gen sh_human_ocl_kill_atl=d_human_ocl_kill/n_motifs
+gen sh_nature_scl_human_ocl_kill_atl=d_nature_scl_human_ocl_kill/n_motifs
+gen sh_human_scl_nature_ocl_kill_atl=d_human_scl_nature_ocl_kill/n_motifs
+
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
 la var sh_nature_subj_excl "Share of triplets with a nature subject (Exclusive)"
@@ -660,25 +782,44 @@ la var sh_nature_eneg_act_oatl "Sh of motifs w at least one triplet w nature obj
 la var sh_hum_nat_ppos_act_atl "Sh of motifs w one triplet w human subj, nature obj, and positive potency"
 la var sh_hum_nat_pneg_act_atl "Sh of motifs w one triplet w human subj, nature obj, and negative potency"
 
-la var sh_nature_ppos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive potency (V2)"
-la var sh_nature_pneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative potency (V2)"
-la var sh_nature_apos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive activity (V2)"
-la var sh_nature_aneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative activity (V2)"
-la var sh_nature_epos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive evaluation (V2)"
-la var sh_nature_eneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative evaluation (V2)"
+la var sh_nature_ppos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive potency (V2-Talha)"
+la var sh_nature_pneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative potency (V2-Talha)"
+la var sh_nature_apos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive activity (V2-Talha)"
+la var sh_nature_aneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative activity (V2-Talha)"
+la var sh_nature_epos_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and positive evaluation (V2-Talha)"
+la var sh_nature_eneg_act_atl_v2 "Sh of motifs w at least one triplet w nature subject and negative evaluation (V2-Talha)"
 
-la var sh_hum_nat_ppos_act_atl_v2 "Sh of motifs w one triplet w human subj, nature obj, and positive potency (V2)"
-la var sh_hum_nat_pneg_act_atl_v2 "Sh of motifs w one triplet w human subj, nature obj, and negative potency (V2)"
+la var sh_hum_nat_ppos_act_atl_v2 "Sh of motifs w one triplet w human subj, nature obj, and positive potency (V2-Talha)"
+la var sh_hum_nat_pneg_act_atl_v2 "Sh of motifs w one triplet w human subj, nature obj, and negative potency (V2-Talha)"
 
-la var sh_nature_ppos_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and positive potency (V3)"
-la var sh_nature_pneg_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and negative potency (V3)"
-la var sh_nature_apos_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and positive activity (V3)"
-la var sh_nature_aneg_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and negative activity (V3)"
-la var sh_nature_epos_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and positive evaluation (V3)"
-la var sh_nature_eneg_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and negative evaluation (V3)"
+la var sh_nature_ppos_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and positive potency (V3-p50)"
+la var sh_nature_pneg_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and negative potency (V3-p50)"
+la var sh_nature_apos_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and positive activity (V3-p50)"
+la var sh_nature_aneg_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and negative activity (V3-p50)"
+la var sh_nature_epos_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and positive evaluation (V3-p50)"
+la var sh_nature_eneg_act_atl_v3 "Sh of motifs w at least one triplet w nature subject and negative evaluation (V3-p50)"
 
-la var sh_hum_nat_ppos_act_atl_v3 "Sh of motifs w one triplet w human subj, nature obj, and positive potency (V3)"
-la var sh_hum_nat_pneg_act_atl_v3 "Sh of motifs w one triplet w human subj, nature obj, and negative potency (V3)"
+la var sh_hum_nat_ppos_act_atl_v3 "Sh of motifs w one triplet w human subj, nature obj, and positive potency (V3-p50)"
+la var sh_hum_nat_pneg_act_atl_v3 "Sh of motifs w one triplet w human subj, nature obj, and negative potency (V3-p50)"
+
+la var sh_nature_ppos_act_atl_v4 "Sh of motifs w at least one triplet w nature subject and positive potency (v4-Talhap50)"
+la var sh_nature_pneg_act_atl_v4 "Sh of motifs w at least one triplet w nature subject and negative potency (v4-Talhap50)"
+la var sh_nature_apos_act_atl_v4 "Sh of motifs w at least one triplet w nature subject and positive activity (v4-Talhap50)"
+la var sh_nature_aneg_act_atl_v4 "Sh of motifs w at least one triplet w nature subject and negative activity (v4-Talhap50)"
+la var sh_nature_epos_act_atl_v4 "Sh of motifs w at least one triplet w nature subject and positive evaluation (v4-Talhap50)"
+la var sh_nature_eneg_act_atl_v4 "Sh of motifs w at least one triplet w nature subject and negative evaluation (v4-Talhap50)"
+
+la var sh_hum_nat_ppos_act_atl_v4 "Sh of motifs w one triplet w human subj, nature obj, and positive potency (v4-Talhap50)"
+la var sh_hum_nat_pneg_act_atl_v4 "Sh of motifs w one triplet w human subj, nature obj, and negative potency (v4-Talhap50)"
+
+la var sh_kill_atl "sh of motifs w at leat one triplet w verb kill"
+la var sh_nature_scl_kill_atl "sh of motifs w at leat one triplet w nature subject and verb kill"
+la var sh_nature_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
+la var sh_human_scl_kill_atl "sh of motifs w at leat one triplet w human subject and verb kill"
+la var sh_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
+la var sh_nature_scl_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature subject, human object and verb kill"
+la var sh_human_scl_nature_ocl_kill_atl "sh of motifs w at leat one triplet w human subject, nature object and verb kill"
+
 
 *la var sh_hum_nat_ppos_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and positive potency"
 *la var sh_hum_nat_pneg_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and negative potency"
