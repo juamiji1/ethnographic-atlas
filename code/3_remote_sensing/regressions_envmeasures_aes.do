@@ -140,8 +140,6 @@ la var sh_nature_any_motif_atl `" "Share of motifs with any" "nature subject or 
 la var sh_nat_smotif_atleast `" "Share of motifs with a" "nature subject" "'
 la var sh_nat_omotif_atleast `" "Share of motifs with a" "nature object" "'
 
-*save "${data}/interim/folklore_envmeasures.dta", replace
-
 *-------------------------------------------------------------------------------
 * Results 
 *
@@ -158,47 +156,155 @@ gl if " "
 *-------------------------------------------------------------------------------
 * Estimations + capture R2/mean/SD per model
 *-------------------------------------------------------------------------------
-eststo aes0: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X0} ${X1_int}) effectvar(${X1_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X0} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany0 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd0    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n0 = "`r(N)'"
+eststo clear 
+** Column 1 
 
-eststo aes1: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X1} ${X1_int}) effectvar(${X1_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X1} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany1 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd1    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n1 = "`r(N)'"
+** First, count any missing values among the used variables. Only observations with no missing value will be used in the regression.
+egen missing_values = rowmiss(bii sh_treecover changewater sh_nature_any_motif_atl)
 
-eststo aes2: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X2} ${X1_int}) effectvar(${X1_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X2} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany2 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd2    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n2 = "`r(N)'"
+eststo aes0: avg_effect bii sh_treecover changewater if missing_values==0, x(${X0} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+gl n0 = "`e(N)'"
+di $n0 
 
-eststo aes3: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X0} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X0} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany3 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd3    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n3 = "`r(N)'"
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany0 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd0    = "`=string(round(r(sd), .0001), "%9.3f")'"
+	di $meany0
+	di $sd0
+restore 
 
-eststo aes4: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X1} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X1} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany4 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd4    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n4 = "`r(N)'"
+** Column 2
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater sh_nature_any_motif_atl hii)
 
-eststo aes5: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X2} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X2} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany5 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd5    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n5 = "`r(N)'"
+eststo aes1: avg_effect bii sh_treecover changewater if missing_values==0, x(${X1} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+gl n1 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany1 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd1    = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
+** Column 3 
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater sh_nature_any_motif_atl hii)
+
+eststo aes2: avg_effect bii sh_treecover changewater if missing_values==0, x(${X2} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+gl n2 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany2 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd2    = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
+** Column 4 
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater sh_nat_smotif_atleast sh_nat_omotif_atleast)
+
+eststo aes3: avg_effect bii sh_treecover changewater if missing_values==0, x(${X0} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+gl n3 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany3 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd3   = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
+** Column 5 
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater sh_nat_smotif_atleast sh_nat_omotif_atleast hii)
+
+eststo aes4: avg_effect bii sh_treecover changewater if missing_values==0, x(${X1} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+gl n4 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany4 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd4  = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
+** Column 6 
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater sh_nat_smotif_atleast sh_nat_omotif_atleast hii)
+
+eststo aes5: avg_effect bii sh_treecover changewater if missing_values==0, x(${X2} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+gl n5 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany5 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd5 = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
 
 *-------------------------------------------------------------------------------
 * Tables
@@ -228,7 +334,8 @@ esttab aes0 aes1 aes2 aes3 aes4 aes5 using "${tables}/Table_folklore_z_env.tex",
 			 `"Standard deviation of dep. var. & ${sd0} & ${sd1} & ${sd2} & ${sd3} & ${sd4} & ${sd5} \\"' ///
 			 `"\bottomrule"' ///
 			 `"\end{tabular}"')
-
+			 
+		 
 *-------------------------------------------------------------------------------
 * Results Potency
 *
@@ -248,47 +355,156 @@ gl if " "
 *-------------------------------------------------------------------------------
 * Estimations + capture R2/mean/SD per model
 *-------------------------------------------------------------------------------
-eststo aes0: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X0} ${X1_int}) effectvar(${X1_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X0} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany0 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd0    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n0 = "`r(N)'"
+eststo clear 
+** Column 1 
 
-eststo aes1: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X1} ${X1_int}) effectvar(${X1_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X1} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany1 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd1    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n1 = "`r(N)'"
+** First, count any missing values among the used variables. Only observations with no missing value will be used in the regression.
+cap drop missing_values 
+egen missing_values = rowmiss(bii sh_treecover changewater ${X1_int})
 
-eststo aes2: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X2} ${X1_int}) effectvar(${X1_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X2} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany2 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd2    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n2 = "`r(N)'"
+eststo aes0: avg_effect bii sh_treecover changewater if missing_values==0, x(${X0} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+gl n0 = "`e(N)'"
+di $n0 
 
-eststo aes3: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X0} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X0} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany3 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd3    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n3 = "`r(N)'"
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany0 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd0    = "`=string(round(r(sd), .0001), "%9.3f")'"
+	di $meany0
+	di $sd0
+restore 
 
-eststo aes4: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X1} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X1} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany4 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd4    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n4 = "`r(N)'"
+** Column 2
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater ${X1_int} hii)
 
-eststo aes5: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X2} ${X2_int}) effectvar(${X2_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X2} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany5 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd5    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n5 = "`r(N)'"
+eststo aes1: avg_effect bii sh_treecover changewater if missing_values==0, x(${X1} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+gl n1 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany1 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd1    = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
+** Column 3 
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater ${X1_int} hii)
+
+eststo aes2: avg_effect bii sh_treecover changewater if missing_values==0, x(${X2} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+gl n2 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany2 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd2    = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
+** Column 4 
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater ${X2_int})
+
+eststo aes3: avg_effect bii sh_treecover changewater if missing_values==0, x(${X0} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+gl n3 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany3 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd3   = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
+** Column 5 
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater ${X2_int} hii)
+
+eststo aes4: avg_effect bii sh_treecover changewater if missing_values==0, x(${X1} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+gl n4 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany4 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd4  = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
+** Column 6 
+drop missing_values
+egen missing_values = rowmiss(bii sh_treecover changewater ${X2_int} hii)
+
+eststo aes5: avg_effect bii sh_treecover changewater if missing_values==0, x(${X2} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+gl n5 = "`e(N)'"
+
+** Now save mean and standard deviation of all dependent variables together 
+preserve  
+	gen reg_sample = e(sample)
+	keep if reg_sample == 1
+** Standardize variables 
+	drop std_bii std_sh_treecover std_changewater
+	foreach var of varlist bii sh_treecover changewater {
+	egen std_`var'= std(`var')
+}
+	rename (std_bii std_sh_treecover std_changewater) (std1 std2 std3)
+	gen num=_n
+	reshape long std, i(num) j(name)
+	sum std
+	gl meany5 = "`=string(round(r(mean), .0001), "%9.3f")'"
+	gl sd5 = "`=string(round(r(sd), .0001), "%9.3f")'"
+restore 
+
 
 *-------------------------------------------------------------------------------
 * Tables
@@ -320,90 +536,6 @@ esttab aes0 aes1 aes2 aes3 aes4 aes5 using "${tables}/Table_folklore_z_env_verbs
 			 `"\bottomrule"' ///
 			 `"\end{tabular}"')
 
-*-------------------------------------------------------------------------------
-* Estimations + capture R2/mean/SD per model
-*-------------------------------------------------------------------------------
-eststo aes0: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X0} ${X3_int}) effectvar(${X3_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X0} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany0 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd0    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n0 = "`r(N)'"
 
-eststo aes1: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X1} ${X3_int}) effectvar(${X3_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X1} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany1 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd1    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n1 = "`r(N)'"
-
-eststo aes2: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X2} ${X3_int}) effectvar(${X3_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X1_int} ${X2} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany2 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd2    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n2 = "`r(N)'"
-
-eststo aes3: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X0} ${X4_int}) effectvar(${X4_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X0} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany3 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd3    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n3 = "`r(N)'"
-
-eststo aes4: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X1} ${X4_int}) effectvar(${X4_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X1} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany4 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd4    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n4 = "`r(N)'"
-
-eststo aes5: avg_effect std_bii std_sh_treecover std_changewater ${if}, x(${X2} ${X4_int}) effectvar(${X4_int}) controltest(z_env!=.) r
-qui reghdfe z_env ${X2_int} ${X2} ${if}, noabs vce(r)
-qui summ z_env if e(sample), d 
-gl meany5 = "`=string(round(r(mean), .0001), "%9.4f")'"
-gl sd5    = "`=string(round(r(sd), .0001), "%9.4f")'"
-gl n5 = "`r(N)'"
-
-*-------------------------------------------------------------------------------
-* Tables
-*-------------------------------------------------------------------------------		 
-*Exporting results dummy
-esttab aes0 aes1 aes2 aes3 aes4 aes5 using "${tables}/Table_folklore_z_env_verbs_v2.tex", keep(ae_sh_nature_ppos_act_atl ae_sh_nature_pneg_act_atl ae_sh_nature_ppos_act_oatl ae_sh_nature_pneg_act_oatl ///
-	ae_sh_nature_epos_act_atl ae_sh_nature_eneg_act_atl ae_sh_nature_epos_act_oatl ae_sh_nature_eneg_act_oatl) ///
-	coeflabels( ///
-	ae_sh_nature_ppos_act_atl "\multirow{2}{*}{\shortstack{Share of motifs w nature subject and\\ \hspace{1em}positive potency triplet}}" ///
-	ae_sh_nature_pneg_act_atl "\multirow{2}{*}{\shortstack{Share of motifs w nature subject and\\ \hspace{1em}negative potency triplet}}" ///
-	ae_sh_nature_ppos_act_oatl "\multirow{2}{*}{\shortstack{Share of motifs w nature object and\\ \hspace{1em}positive potency triplet}}" ///
-	ae_sh_nature_pneg_act_oatl "\multirow{2}{*}{\shortstack{Share of motifs w nature object and\\ \hspace{1em}negative potency triplet}}" ///	
-	ae_sh_nature_epos_act_atl "\multirow{2}{*}{\shortstack{Share of motifs w nature subject and\\ \hspace{1em}positive evaluation triplet}}" ///
-	ae_sh_nature_eneg_act_atl "\multirow{2}{*}{\shortstack{Share of motifs w nature subject and\\ \hspace{1em}negative evaluation triplet}}" ///
-	ae_sh_nature_epos_act_oatl "\multirow{2}{*}{\shortstack{Share of motifs w nature object and\\ \hspace{1em}positive evaluation triplet}}" ///
-	ae_sh_nature_eneg_act_oatl "\multirow{2}{*}{\shortstack{Share of motifs w nature object and\\ \hspace{1em}negative evaluation triplet}}") ///
-	se nocons star(* 0.10 ** 0.05 *** 0.01) ///
-	label nolines fragment nomtitle nonumbers noobs nodep collabels(none) ///
-	booktabs b(3) replace ///
-	prehead(`"\begin{tabular}[t]{l*{6}{c}}"' ///
-			`"\toprule"' ///
-			`" & \multicolumn{6}{c}{Environmental Measures (AES)} \\"' ///
-			`"\cmidrule(lr){2-7}"' ///
-			`" & (1) & (2) & (3) & (4) & (5) & (6) \\"' ///
-			`"\midrule"') ///
-	postfoot(`" & & & & & & \\"' ///
-			 `" HII control & No & Yes & Yes & No & Yes & Yes \\"' ///
-			 `" Climatic zones control & No & No & Yes & No & No & Yes \\"' ///
-			 `" Country fixed effects &  Yes & Yes & Yes & Yes & Yes & Yes \\"' ///			 
-			 `" & & & & & & \\"' ///
-			 `"Observations & ${n0} & ${n1} & ${n2} & ${n3} & ${n4} & ${n5} \\"' ///
-			 `"Mean of dep. var. & ${meany0} & ${meany1} & ${meany2} & ${meany3} & ${meany4} & ${meany5} \\"' ///
-			 `"Standard deviation of dep. var. & ${sd0} & ${sd1} & ${sd2} & ${sd3} & ${sd4} & ${sd5} \\"' ///
-			 `"\bottomrule"' ///
-			 `"\end{tabular}"')	 
-
-				 
-				 
-
-			 
-			 
 			 
 *END
