@@ -510,6 +510,8 @@ preserve
 
 	gen nature_scl_kill=1 if nature_scl==1 & kill==1
 	gen nature_ocl_kill=1 if nature_ocl==1 & kill==1
+	
+	gen nature_any_kill= 1 if (nature_scl==1 | nature_ocl==1) & kill==1
 
 	gen human_scl_kill=1 if (human_scl==1 | manmade_scl==1) & kill==1
 	gen human_ocl_kill=1 if human_ocl==1 & kill==1
@@ -522,11 +524,13 @@ preserve
 	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
 	keep if (stotal!=0 | ototal!=0) & obs_tag==1
 
-	collapse (sum) n_triplets_act=obs_tag kill nature_scl_kill nature_ocl_kill human_scl_kill human_ocl_kill human_scl_nature_ocl_kill nature_scl_human_ocl_kill, by(motif_id)
+	collapse (sum) n_triplets_act=obs_tag kill nature_scl_kill nature_ocl_kill human_scl_kill human_ocl_kill human_scl_nature_ocl_kill nature_scl_human_ocl_kill nature_any_kill, by(motif_id)
 
 	gen d_kill=(kill>0) if kill!=.
 	gen d_nature_scl_kill=(nature_scl_kill>0) if nature_scl_kill!=.
 	gen d_nature_ocl_kill=(nature_ocl_kill>0) if nature_ocl_kill!=.
+	
+	gen d_nature_any_kill=(nature_any_kill>0) if nature_any_kill!=.
 
 	gen d_human_scl_kill=(human_scl_kill>0) if human_scl_kill!=.
 	gen d_human_ocl_kill=(human_ocl_kill>0) if human_ocl_kill!=.
@@ -538,6 +542,18 @@ preserve
 	save `Triplets_kill', replace
 
 restore 
+
+*-------------------------------------------------------------------------------
+* Continuous ACT measures
+*-------------------------------------------------------------------------------
+preserve
+
+	collapse (mean) evaluation potency activity evaluation_v2 potency_v2 activity_v2, by(motif_id)
+	
+	tempfile ACT_cont
+	save `ACT_cont', replace
+	
+restore
 
 *-------------------------------------------------------------------------------
 * MERGING TRIPLETS WITH MOTIFS-EA-WESEE CONVERSION DATA (Our Extension)
@@ -557,12 +573,20 @@ merge m:1 motif_id using `Triplets_act_v2', keep(1 3) gen(merge_triplet_act_v2)
 merge m:1 motif_id using `Triplets_act_v3', keep(1 3) gen(merge_triplet_act_v3)
 merge m:1 motif_id using `Triplets_act_v4', keep(1 3) gen(merge_triplet_act_v4)
 merge m:1 motif_id using `Triplets_kill', keep(1 3) gen(merge_triplet_kill)
+merge m:1 motif_id using `ACT_cont', keep(1 3) gen(merge_act_cont)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
 
 ren share n_motifs
 
-collapse (sum) n_motifs n_triplets* human* nature* d_human* d_nat* d_super* super* d_kill*, by(atlas group_berezkin)
+egen all_n_motifs=sum(n_motifs)
+bys atlas group_berezkin: egen ea_n_motifs=sum(n_motifs)
+
+foreach var in evaluation potency activity evaluation_v2 potency_v2 activity_v2 {
+	gen w_`var'= (ea_n_motifs*`var')/all_n_motifs
+}
+
+collapse (sum) n_motifs n_triplets* human* nature* d_human* d_nat* d_super* super* d_kill* (mean) w_* evaluation potency activity evaluation_v2 potency_v2 activity_v2, by(atlas group_berezkin)
 
 *Creating different measures regarding subject
 gen sh_human_subj_nonexcl=human_scl/n_triplets_scl
@@ -680,6 +704,8 @@ gen sh_hum_nat_pneg_act_atl_v4=d_nature_human_pneg_v4/n_motifs
 gen sh_kill_atl=d_kill/n_motifs
 gen sh_nature_scl_kill_atl=d_nature_scl_kill/n_motifs
 gen sh_nature_ocl_kill_atl=d_nature_ocl_kill/n_motifs
+gen sh_nature_any_kill_atl=d_nature_any_kill/n_motifs
+
 gen sh_human_scl_kill_atl=d_human_scl_kill/n_motifs
 gen sh_human_ocl_kill_atl=d_human_ocl_kill/n_motifs
 gen sh_nature_scl_human_ocl_kill_atl=d_nature_scl_human_ocl_kill/n_motifs
@@ -815,11 +841,25 @@ la var sh_hum_nat_pneg_act_atl_v4 "Sh of motifs w one triplet w human subj, natu
 la var sh_kill_atl "sh of motifs w at leat one triplet w verb kill"
 la var sh_nature_scl_kill_atl "sh of motifs w at leat one triplet w nature subject and verb kill"
 la var sh_nature_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
+la var sh_nature_any_kill_atl "sh of motifs w at leat one triplet w nature subject, nature object, and verb kill"
 la var sh_human_scl_kill_atl "sh of motifs w at leat one triplet w human subject and verb kill"
 la var sh_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
 la var sh_nature_scl_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature subject, human object and verb kill"
 la var sh_human_scl_nature_ocl_kill_atl "sh of motifs w at leat one triplet w human subject, nature object and verb kill"
 
+la var evaluation "ACT Evaluation"
+la var potency "ACT Potency"
+la var activity "ACT Activity"
+la var evaluation_v2 "ACT Evaluation (Talha)"
+la var potency_v2 "ACT Potency (Talha)"
+la var activity_v2 "ACT Activity (Talha)"
+
+la var w_evaluation "Weighted ACT Evaluation"
+la var w_potency "Weighted ACT Potency"
+la var w_activity "Weighted ACT Activity"
+la var w_evaluation_v2 "Weighted ACT Evaluation (Talha)"
+la var w_potency_v2 "Weighted ACT Potency (Talha)"
+la var w_activity_v2 "Weighted ACT Activity (Talha)"
 
 *la var sh_hum_nat_ppos_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and positive potency"
 *la var sh_hum_nat_pneg_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and negative potency"
