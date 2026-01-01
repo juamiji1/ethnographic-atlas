@@ -579,6 +579,7 @@ unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.
 
 ren share n_motifs
 
+END
 bys atlas group_berezkin: egen ea_n_motifs=sum(n_motifs)
 
 foreach var in evaluation potency activity evaluation_v2 potency_v2 activity_v2 {
