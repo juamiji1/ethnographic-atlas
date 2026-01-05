@@ -1143,7 +1143,10 @@ replace v54=. if v54>6
 gen d_v66=1 if v66>1 & v66!=.
 replace d_v66=0 if v66==1
 
+*Encode EA ID
+encode v107, gen(eafolk_id)
 
+*Saving data
 save "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.dta", replace
 export delimited "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.csv", replace
 

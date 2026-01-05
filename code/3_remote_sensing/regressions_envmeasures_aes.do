@@ -162,9 +162,14 @@ eststo clear
 ** First, count any missing values among the used variables. Only observations with no missing value will be used in the regression.
 egen missing_values = rowmiss(bii sh_treecover changewater sh_nature_any_motif_atl)
 
-eststo aes0: avg_effect bii sh_treecover changewater if missing_values==0, x(${X0} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+eststo aes0: avg_effect bii sh_treecover changewater if missing_values==0, x(${X0} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) cl(eafolk_id)
 gl n0 = "`e(N)'"
 di $n0 
+
+*Number of clusters
+distinct eafolk_id if missing_values==0
+gl cl0="`r(ndistinct)'"
+di $cl0 
 
 ** Now save mean and standard deviation of all dependent variables together 
 preserve  
@@ -189,8 +194,12 @@ restore
 drop missing_values
 egen missing_values = rowmiss(bii sh_treecover changewater sh_nature_any_motif_atl hii)
 
-eststo aes1: avg_effect bii sh_treecover changewater if missing_values==0, x(${X1} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+eststo aes1: avg_effect bii sh_treecover changewater if missing_values==0, x(${X1} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) cl(eafolk_id)
 gl n1 = "`e(N)'"
+
+*Number of clusters
+distinct eafolk_id if missing_values==0
+gl cl1="`r(ndistinct)'"
 
 ** Now save mean and standard deviation of all dependent variables together 
 preserve  
@@ -213,8 +222,12 @@ restore
 drop missing_values
 egen missing_values = rowmiss(bii sh_treecover changewater sh_nature_any_motif_atl hii)
 
-eststo aes2: avg_effect bii sh_treecover changewater if missing_values==0, x(${X2} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) r
+eststo aes2: avg_effect bii sh_treecover changewater if missing_values==0, x(${X2} ${X1_int}) effectvar(${X1_int}) controltest(missing_values==0) cl(eafolk_id)
 gl n2 = "`e(N)'"
+
+*Number of clusters
+distinct eafolk_id if missing_values==0
+gl cl2="`r(ndistinct)'"
 
 ** Now save mean and standard deviation of all dependent variables together 
 preserve  
@@ -237,8 +250,12 @@ restore
 drop missing_values
 egen missing_values = rowmiss(bii sh_treecover changewater sh_nat_smotif_atleast sh_nat_omotif_atleast)
 
-eststo aes3: avg_effect bii sh_treecover changewater if missing_values==0, x(${X0} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+eststo aes3: avg_effect bii sh_treecover changewater if missing_values==0, x(${X0} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) cl(eafolk_id)
 gl n3 = "`e(N)'"
+
+*Number of clusters
+distinct eafolk_id if missing_values==0
+gl cl3="`r(ndistinct)'"
 
 ** Now save mean and standard deviation of all dependent variables together 
 preserve  
@@ -261,8 +278,12 @@ restore
 drop missing_values
 egen missing_values = rowmiss(bii sh_treecover changewater sh_nat_smotif_atleast sh_nat_omotif_atleast hii)
 
-eststo aes4: avg_effect bii sh_treecover changewater if missing_values==0, x(${X1} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+eststo aes4: avg_effect bii sh_treecover changewater if missing_values==0, x(${X1} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) cl(eafolk_id)
 gl n4 = "`e(N)'"
+
+*Number of clusters
+distinct eafolk_id if missing_values==0
+gl cl4="`r(ndistinct)'"
 
 ** Now save mean and standard deviation of all dependent variables together 
 preserve  
@@ -285,8 +306,12 @@ restore
 drop missing_values
 egen missing_values = rowmiss(bii sh_treecover changewater sh_nat_smotif_atleast sh_nat_omotif_atleast hii)
 
-eststo aes5: avg_effect bii sh_treecover changewater if missing_values==0, x(${X2} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) r
+eststo aes5: avg_effect bii sh_treecover changewater if missing_values==0, x(${X2} ${X2_int}) effectvar(${X2_int}) controltest(missing_values==0) cl(eafolk_id)
 gl n5 = "`e(N)'"
+
+*Number of clusters
+distinct eafolk_id if missing_values==0
+gl cl5="`r(ndistinct)'"
 
 ** Now save mean and standard deviation of all dependent variables together 
 preserve  
@@ -331,12 +356,13 @@ esttab aes0 aes1 aes2 aes3 aes4 aes5 using "${tables}/Table_folklore_z_env.tex",
 			 `" & & & & & & \\"' ///
 			 `"Observations & ${n0} & ${n1} & ${n2} & ${n3} & ${n4} & ${n5} \\"' ///
 			 `"Mean of dep. var. & ${meany0} & ${meany1} & ${meany2} & ${meany3} & ${meany4} & ${meany5} \\"' ///
-			 `"Standard deviation of dep. var. & ${sd0} & ${sd1} & ${sd2} & ${sd3} & ${sd4} & ${sd5} \\"' ///
+			 `"Standard deviation of dep. var. & ${sd0} & ${sd1} & ${sd2} & ${sd3} & ${sd4} & ${sd5} \\"' ///			 
+			 `"Ethnic-folklore clusters & ${cl0} & ${cl1} & ${cl2} & ${cl3} & ${cl4} & ${cl5} \\"' ///
 			 `"\bottomrule"' ///
 			 `"\end{tabular}"')
 			 
-		 
-*-------------------------------------------------------------------------------
+END		 
+/*-------------------------------------------------------------------------------
 * Results Potency
 *
 *-------------------------------------------------------------------------------
