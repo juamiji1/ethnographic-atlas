@@ -501,7 +501,7 @@ preserve
 restore
 
 *-------------------------------------------------------------------------------
-* Calculating KILL measures per motif (for SUBJECTS and OBJECTS) 
+* Calculating Kill/No Kill measures per motif (for SUBJECTS and OBJECTS) 
 *-------------------------------------------------------------------------------
 preserve
 
@@ -511,7 +511,11 @@ preserve
 	gen nature_scl_kill=1 if nature_scl==1 & kill==1
 	gen nature_ocl_kill=1 if nature_ocl==1 & kill==1
 	
+	gen nature_scl_nokill=1 if nature_scl==1 & kill==0
+	gen nature_ocl_nokill=1 if nature_ocl==1 & kill==0
+	
 	gen nature_any_kill= 1 if (nature_scl==1 | nature_ocl==1) & kill==1
+	gen nature_any_nokill= 1 if (nature_scl==1 | nature_ocl==1) & kill==0
 
 	gen human_scl_kill=1 if (human_scl==1 | manmade_scl==1) & kill==1
 	gen human_ocl_kill=1 if human_ocl==1 & kill==1
@@ -524,13 +528,17 @@ preserve
 	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
 	keep if (stotal!=0 | ototal!=0) & obs_tag==1
 
-	collapse (sum) n_triplets_act=obs_tag kill nature_scl_kill nature_ocl_kill human_scl_kill human_ocl_kill human_scl_nature_ocl_kill nature_scl_human_ocl_kill nature_any_kill, by(motif_id)
+	collapse (sum) n_triplets_act=obs_tag kill nature_scl_kill nature_ocl_kill human_scl_kill human_ocl_kill human_scl_nature_ocl_kill nature_scl_human_ocl_kill nature_any_kill nature_scl_nokill nature_ocl_nokill nature_any_nokill, by(motif_id)
 
 	gen d_kill=(kill>0) if kill!=.
 	gen d_nature_scl_kill=(nature_scl_kill>0) if nature_scl_kill!=.
 	gen d_nature_ocl_kill=(nature_ocl_kill>0) if nature_ocl_kill!=.
 	
+	gen d_nature_scl_nokill=(nature_scl_nokill>0) if nature_scl_nokill!=.
+	gen d_nature_ocl_nokill=(nature_ocl_nokill>0) if nature_ocl_nokill!=.
+	
 	gen d_nature_any_kill=(nature_any_kill>0) if nature_any_kill!=.
+	gen d_nature_any_nokill=(nature_any_nokill>0) if nature_any_nokill!=.
 
 	gen d_human_scl_kill=(human_scl_kill>0) if human_scl_kill!=.
 	gen d_human_ocl_kill=(human_ocl_kill>0) if human_ocl_kill!=.
@@ -709,6 +717,10 @@ gen sh_nature_scl_kill_atl=d_nature_scl_kill/n_motifs
 gen sh_nature_ocl_kill_atl=d_nature_ocl_kill/n_motifs
 gen sh_nature_any_kill_atl=d_nature_any_kill/n_motifs
 
+gen sh_nature_scl_nokill_atl=d_nature_scl_nokill/n_motifs
+gen sh_nature_ocl_nokill_atl=d_nature_ocl_nokill/n_motifs
+gen sh_nature_any_nokill_atl=d_nature_any_nokill/n_motifs
+
 gen sh_human_scl_kill_atl=d_human_scl_kill/n_motifs
 gen sh_human_ocl_kill_atl=d_human_ocl_kill/n_motifs
 gen sh_nature_scl_human_ocl_kill_atl=d_nature_scl_human_ocl_kill/n_motifs
@@ -849,6 +861,10 @@ la var sh_human_scl_kill_atl "sh of motifs w at leat one triplet w human subject
 la var sh_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
 la var sh_nature_scl_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature subject, human object and verb kill"
 la var sh_human_scl_nature_ocl_kill_atl "sh of motifs w at leat one triplet w human subject, nature object and verb kill"
+
+la var sh_nature_scl_nokill_atl "sh of motifs w at leat one triplet w nature subject and no kill verb"
+la var sh_nature_ocl_nokill_atl "sh of motifs w at leat one triplet w nature object and no kill verb"
+la var sh_nature_any_nokill_atl "sh of motifs w at leat one triplet w nature subject, nature object, and no kill verb"
 
 la var evaluation "ACT Evaluation"
 la var potency "ACT Potency"
