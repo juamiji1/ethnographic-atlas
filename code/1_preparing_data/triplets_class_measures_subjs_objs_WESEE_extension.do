@@ -503,53 +503,105 @@ restore
 *-------------------------------------------------------------------------------
 * Calculating Kill/No Kill measures per motif (for SUBJECTS and OBJECTS) 
 *-------------------------------------------------------------------------------
+// preserve
+//
+// 	gen kill = regexm(lower(action), ///
+// 		"\b(kill|killed|killing|murder|murdered|murdering|slay|slain|slaying|assassinate|assassinated|execute|executed|executing|destroy|destroyed|destroying)\b")
+//
+// 	gen nature_scl_kill=1 if nature_scl==1 & kill==1
+// 	gen nature_ocl_kill=1 if nature_ocl==1 & kill==1
+//	
+// 	gen nature_scl_nokill=1 if nature_scl==1 & kill==0
+// 	gen nature_ocl_nokill=1 if nature_ocl==1 & kill==0
+//	
+// 	gen nature_any_kill= 1 if (nature_scl==1 | nature_ocl==1) & kill==1
+// 	gen nature_any_nokill= 1 if (nature_scl==1 | nature_ocl==1) & kill==0
+//
+// 	gen human_scl_kill=1 if (human_scl==1 | manmade_scl==1) & kill==1
+// 	gen human_ocl_kill=1 if human_ocl==1 & kill==1
+//	
+// 	gen nature_scl_human_ocl_kill=1 if nature_scl==1 & human_ocl==1 & kill==1		
+// 	gen human_scl_nature_ocl_kill=1 if (human_scl==1 | manmade_scl==1) & nature_ocl==1 & kill==1
+//
+// 	*keeping only triplets with some sort ofclassification 
+// 	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+// 	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+// 	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+//
+// 	collapse (sum) n_triplets_act=obs_tag kill nature_scl_kill nature_ocl_kill human_scl_kill human_ocl_kill human_scl_nature_ocl_kill nature_scl_human_ocl_kill nature_any_kill nature_scl_nokill nature_ocl_nokill nature_any_nokill, by(motif_id)
+//
+// 	gen d_kill=(kill>0) if kill!=.
+// 	gen d_nature_scl_kill=(nature_scl_kill>0) if nature_scl_kill!=.
+// 	gen d_nature_ocl_kill=(nature_ocl_kill>0) if nature_ocl_kill!=.
+//	
+// 	gen d_nature_scl_nokill=(nature_scl_nokill>0) if nature_scl_nokill!=.
+// 	gen d_nature_ocl_nokill=(nature_ocl_nokill>0) if nature_ocl_nokill!=.
+//	
+// 	gen d_nature_any_kill=(nature_any_kill>0) if nature_any_kill!=.
+// 	gen d_nature_any_nokill=(nature_any_nokill>0) if nature_any_nokill!=.
+//
+// 	gen d_human_scl_kill=(human_scl_kill>0) if human_scl_kill!=.
+// 	gen d_human_ocl_kill=(human_ocl_kill>0) if human_ocl_kill!=.
+//	
+// 	gen d_nature_scl_human_ocl_kill=(nature_scl_human_ocl_kill>0) if nature_scl_human_ocl_kill!=.
+// 	gen d_human_scl_nature_ocl_kill=(human_scl_nature_ocl_kill>0) if human_scl_nature_ocl_kill!=.
+//
+// 	tempfile Triplets_kill
+// 	save `Triplets_kill', replace
+//
+// restore 
+
+*-------------------------------------------------------------------------------
+* Calculating most 10 common verbs measures per motif (for SUBJECTS and OBJECTS) 
+*-------------------------------------------------------------------------------
+tab nature_scl
+tab action if nature_scl==1, m sort
+
 preserve
 
-	gen kill = regexm(lower(sentence), ///
-		"\b(kill|killed|killing|murder|murdered|murdering|slay|slain|slaying|assassinate|assassinated|execute|executed|executing|destroy|destroyed|destroying)\b")
+	gen verb_miss=(action=="")
 
-	gen nature_scl_kill=1 if nature_scl==1 & kill==1
-	gen nature_ocl_kill=1 if nature_ocl==1 & kill==1
-	
-	gen nature_scl_nokill=1 if nature_scl==1 & kill==0
-	gen nature_ocl_nokill=1 if nature_ocl==1 & kill==0
-	
-	gen nature_any_kill= 1 if (nature_scl==1 | nature_ocl==1) & kill==1
-	gen nature_any_nokill= 1 if (nature_scl==1 | nature_ocl==1) & kill==0
+	gen nature_scl_verbmiss=1 if nature_scl==1 & verb_miss==1
+	gen nature_scl_noverbmiss=1 if nature_scl==1 & verb_miss==0
 
-	gen human_scl_kill=1 if (human_scl==1 | manmade_scl==1) & kill==1
-	gen human_ocl_kill=1 if human_ocl==1 & kill==1
-	
-	gen nature_scl_human_ocl_kill=1 if nature_scl==1 & human_ocl==1 & kill==1		
-	gen human_scl_nature_ocl_kill=1 if (human_scl==1 | manmade_scl==1) & nature_ocl==1 & kill==1
+	gl verbs "bring carry become eat have kill ask get give take"
+
+	foreach verb of global verbs{
+		
+		cap drop `verb' c
+		
+		gen `verb'= (action=="`verb'")
+		gen nature_scl_`verb'=1 if nature_scl==1 & `verb'==1
+		gen nature_scl_no`verb'=1 if nature_scl==1 & `verb'==0	
+		
+	}
 
 	*keeping only triplets with some sort ofclassification 
 	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
 	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
 	keep if (stotal!=0 | ototal!=0) & obs_tag==1
 
-	collapse (sum) n_triplets_act=obs_tag kill nature_scl_kill nature_ocl_kill human_scl_kill human_ocl_kill human_scl_nature_ocl_kill nature_scl_human_ocl_kill nature_any_kill nature_scl_nokill nature_ocl_nokill nature_any_nokill, by(motif_id)
-
-	gen d_kill=(kill>0) if kill!=.
-	gen d_nature_scl_kill=(nature_scl_kill>0) if nature_scl_kill!=.
-	gen d_nature_ocl_kill=(nature_ocl_kill>0) if nature_ocl_kill!=.
+	collapse (sum) n_triplets_act=obs_tag nature_scl_*, by(motif_id)
 	
-	gen d_nature_scl_nokill=(nature_scl_nokill>0) if nature_scl_nokill!=.
-	gen d_nature_ocl_nokill=(nature_ocl_nokill>0) if nature_ocl_nokill!=.
-	
-	gen d_nature_any_kill=(nature_any_kill>0) if nature_any_kill!=.
-	gen d_nature_any_nokill=(nature_any_nokill>0) if nature_any_nokill!=.
+ 	gen d_nature_scl_verbmiss=(nature_scl_verbmiss>0) if nature_scl_verbmiss!=.
+ 	gen d_nature_scl_noverbmiss=(nature_scl_noverbmiss>0) if nature_scl_noverbmiss!=.
 
-	gen d_human_scl_kill=(human_scl_kill>0) if human_scl_kill!=.
-	gen d_human_ocl_kill=(human_ocl_kill>0) if human_ocl_kill!=.
-	
-	gen d_nature_scl_human_ocl_kill=(nature_scl_human_ocl_kill>0) if nature_scl_human_ocl_kill!=.
-	gen d_human_scl_nature_ocl_kill=(human_scl_nature_ocl_kill>0) if human_scl_nature_ocl_kill!=.
+	foreach verb of global verbs{
+		
+		cap drop d_nature_scl_`verb' d_nature_scl_no`verb'
+		
+		gen d_nature_scl_`verb'=(nature_scl_`verb'>0) if nature_scl_`verb'!=.
+		gen d_nature_scl_no`verb'=(nature_scl_no`verb'>0) if nature_scl_no`verb'!=.
+		
+	}
 
-	tempfile Triplets_kill
-	save `Triplets_kill', replace
+	tempfile Triplets_verbs
+	save `Triplets_verbs', replace
 
 restore 
+
+
+
 
 *-------------------------------------------------------------------------------
 * Continuous ACT measures
@@ -580,7 +632,8 @@ merge m:1 motif_id using `Triplets_act', keep(1 3) gen(merge_triplet_act)
 merge m:1 motif_id using `Triplets_act_v2', keep(1 3) gen(merge_triplet_act_v2)
 merge m:1 motif_id using `Triplets_act_v3', keep(1 3) gen(merge_triplet_act_v3)
 merge m:1 motif_id using `Triplets_act_v4', keep(1 3) gen(merge_triplet_act_v4)
-merge m:1 motif_id using `Triplets_kill', keep(1 3) gen(merge_triplet_kill)
+*merge m:1 motif_id using `Triplets_kill', keep(1 3) gen(merge_triplet_kill)
+merge m:1 motif_id using `Triplets_verbs', keep(1 3) gen(merge_triplet_verbs)
 merge m:1 motif_id using `ACT_cont', keep(1 3) gen(merge_act_cont)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
@@ -597,7 +650,7 @@ foreach var in evaluation potency activity evaluation_v2 potency_v2 activity_v2 
 	
 }
 
-collapse (sum) n_motifs n_triplets* human* nature* d_human* d_nat* d_super* super* d_kill* (mean) w_* evaluation potency activity evaluation_v2 potency_v2 activity_v2, by(atlas group_berezkin)
+collapse (sum) n_motifs n_triplets* human* nature* d_human* d_nat* d_super* super* (mean) w_* evaluation potency activity evaluation_v2 potency_v2 activity_v2, by(atlas group_berezkin)
 
 *Creating different measures regarding subject
 gen sh_human_subj_nonexcl=human_scl/n_triplets_scl
@@ -712,19 +765,28 @@ gen sh_hum_nat_ppos_act_atl_v4=d_nature_human_ppos_v4/n_motifs
 gen sh_hum_nat_pneg_act_atl_v4=d_nature_human_pneg_v4/n_motifs
 
 *Creating measures related to kill 
-gen sh_kill_atl=d_kill/n_motifs
-gen sh_nature_scl_kill_atl=d_nature_scl_kill/n_motifs
-gen sh_nature_ocl_kill_atl=d_nature_ocl_kill/n_motifs
-gen sh_nature_any_kill_atl=d_nature_any_kill/n_motifs
+// gen sh_kill_atl=d_kill/n_motifs
+// gen sh_nature_scl_kill_atl=d_nature_scl_kill/n_motifs
+// gen sh_nature_ocl_kill_atl=d_nature_ocl_kill/n_motifs
+// gen sh_nature_any_kill_atl=d_nature_any_kill/n_motifs
+//
+// gen sh_nature_scl_nokill_atl=d_nature_scl_nokill/n_motifs
+// gen sh_nature_ocl_nokill_atl=d_nature_ocl_nokill/n_motifs
+// gen sh_nature_any_nokill_atl=d_nature_any_nokill/n_motifs
+//
+// gen sh_human_scl_kill_atl=d_human_scl_kill/n_motifs
+// gen sh_human_ocl_kill_atl=d_human_ocl_kill/n_motifs
+// gen sh_nature_scl_human_ocl_kill_atl=d_nature_scl_human_ocl_kill/n_motifs
+// gen sh_human_scl_nature_ocl_kill_atl=d_human_scl_nature_ocl_kill/n_motifs
 
-gen sh_nature_scl_nokill_atl=d_nature_scl_nokill/n_motifs
-gen sh_nature_ocl_nokill_atl=d_nature_ocl_nokill/n_motifs
-gen sh_nature_any_nokill_atl=d_nature_any_nokill/n_motifs
+*10 most common verbs 
+gen sh_nature_scl_verbmiss_atl=d_nature_scl_verbmiss/n_motifs
+gen sh_nature_scl_noverbmiss_atl=d_nature_scl_noverbmiss/n_motifs
 
-gen sh_human_scl_kill_atl=d_human_scl_kill/n_motifs
-gen sh_human_ocl_kill_atl=d_human_ocl_kill/n_motifs
-gen sh_nature_scl_human_ocl_kill_atl=d_nature_scl_human_ocl_kill/n_motifs
-gen sh_human_scl_nature_ocl_kill_atl=d_human_scl_nature_ocl_kill/n_motifs
+foreach verb of global verbs{
+	gen sh_nature_scl_`verb'_atl=d_nature_scl_`verb'/n_motifs
+	gen sh_nature_scl_no`verb'_atl=d_nature_scl_no`verb'/n_motifs
+}
 
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
@@ -853,18 +915,26 @@ la var sh_nature_eneg_act_atl_v4 "Sh of motifs w at least one triplet w nature s
 la var sh_hum_nat_ppos_act_atl_v4 "Sh of motifs w one triplet w human subj, nature obj, and positive potency (v4-Talhap50)"
 la var sh_hum_nat_pneg_act_atl_v4 "Sh of motifs w one triplet w human subj, nature obj, and negative potency (v4-Talhap50)"
 
-la var sh_kill_atl "sh of motifs w at leat one triplet w verb kill"
-la var sh_nature_scl_kill_atl "sh of motifs w at leat one triplet w nature subject and verb kill"
-la var sh_nature_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
-la var sh_nature_any_kill_atl "sh of motifs w at leat one triplet w nature subject, nature object, and verb kill"
-la var sh_human_scl_kill_atl "sh of motifs w at leat one triplet w human subject and verb kill"
-la var sh_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
-la var sh_nature_scl_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature subject, human object and verb kill"
-la var sh_human_scl_nature_ocl_kill_atl "sh of motifs w at leat one triplet w human subject, nature object and verb kill"
+// la var sh_kill_atl "sh of motifs w at leat one triplet w verb kill"
+// la var sh_nature_scl_kill_atl "sh of motifs w at leat one triplet w nature subject and verb kill"
+// la var sh_nature_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
+// la var sh_nature_any_kill_atl "sh of motifs w at leat one triplet w nature subject, nature object, and verb kill"
+// la var sh_human_scl_kill_atl "sh of motifs w at leat one triplet w human subject and verb kill"
+// la var sh_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature object and verb kill"
+// la var sh_nature_scl_human_ocl_kill_atl "sh of motifs w at leat one triplet w nature subject, human object and verb kill"
+// la var sh_human_scl_nature_ocl_kill_atl "sh of motifs w at leat one triplet w human subject, nature object and verb kill"
+//
+// la var sh_nature_scl_nokill_atl "sh of motifs w at leat one triplet w nature subject and no kill verb"
+// la var sh_nature_ocl_nokill_atl "sh of motifs w at leat one triplet w nature object and no kill verb"
+// la var sh_nature_any_nokill_atl "sh of motifs w at leat one triplet w nature subject, nature object, and no kill verb"
 
-la var sh_nature_scl_nokill_atl "sh of motifs w at leat one triplet w nature subject and no kill verb"
-la var sh_nature_ocl_nokill_atl "sh of motifs w at leat one triplet w nature object and no kill verb"
-la var sh_nature_any_nokill_atl "sh of motifs w at leat one triplet w nature subject, nature object, and no kill verb"
+la var sh_nature_scl_verbmiss_atl "sh of motifs w at least one triplet w nature subject and missing verb"
+la var sh_nature_scl_noverbmiss_atl "sh of motifs w at least one triplet w nature subject and no missing verb"
+
+foreach verb of global verbs{
+	la var sh_nature_scl_`verb'_atl "sh of motifs w at least one triplet w nature subject and verb `verb'"
+	la var sh_nature_scl_no`verb'_atl "sh of motifs w at least one triplet w nature subject and no verb `verb'"
+}
 
 la var evaluation "ACT Evaluation"
 la var potency "ACT Potency"
