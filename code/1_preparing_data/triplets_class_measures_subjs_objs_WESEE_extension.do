@@ -1,3 +1,30 @@
+clear all 
+
+*Setting directories 
+if c(username) == "juami" {
+	gl localpath "C:\Users/`c(username)'\Dropbox\RAships\2-Folklore-Nathan-Project\EA-Maps-Nathan-project\Measures_work"
+	*gl overleafpath "C:\Users/`c(username)'\Dropbox\Overleaf\GD-draft-slv"
+	gl do "C:\Github\ethnographic-atlas\code"
+	
+}
+else {
+	*gl path "C:\Users/`c(username)'\Dropbox\"
+}
+
+gl data "${localpath}\data"
+gl maps "${localpath}\maps"
+gl tables "${localpath}\tables"
+gl plots "${localpath}\plots"
+
+cd "${data}"
+
+*Setting a pre-scheme for plots
+set scheme s2mono
+grstyle init
+grstyle title color black
+grstyle color background white
+grstyle color major_grid dimgray
+
 
 *-------------------------------------------------------------------------------
 * FIXING CLASSIFICATIONS OF OBJECTS AND SUBJECTS
@@ -364,6 +391,8 @@ preserve
 	gen posevaluation=1 if evaluation>=`r(p50)' & evaluation!=.
 	replace posevaluation=0 if evaluation<`r(p50)'
 	
+	tab action if nature_scl==1 & posevaluation==0, sort
+	
 	*Where (1) subject is nature (2) potency is positive or negative
 	gen nature_ppos_v3=1 if nature_scl==1 & pospotency==1
 	gen nature_pneg_v3=1 if nature_scl==1 & pospotency==0
@@ -461,6 +490,9 @@ preserve
 	summ evaluation_v2, d 
 	gen posevaluation_v2=1 if evaluation_v2>=`r(p50)' & evaluation_v2!=.
 	replace posevaluation=0 if evaluation_v2<`r(p50)'
+	
+	tab action if nature_scl==1 & posevaluation==1, m sort
+	tab action if nature_scl==1 & posevaluation==0, m sort
 	
 	*Where (1) subject is nature (2) potency is positive or negative
 	gen nature_ppos_v4=1 if nature_scl==1 & pospotency==1
@@ -564,18 +596,18 @@ preserve
 	gen nature_scl_verbmiss=1 if nature_scl==1 & verb_miss==1
 	gen nature_scl_noverbmiss=1 if nature_scl==1 & verb_miss==0
 
-	gl verbs "bring carry become eat have kill ask get give take"
+	gl verbs "bring carry become eat have kill ask get give take attack swallow catch bother hit use destroy leave throw turn"
 
 	foreach verb of global verbs{
 		
 		cap drop `verb' c
 		
-		gen `verb'= (action=="`verb'")
+		gen `verb'= (action=="`verb'") if action!=""
 		gen nature_scl_`verb'=1 if nature_scl==1 & `verb'==1
 		gen nature_scl_no`verb'=1 if nature_scl==1 & `verb'==0	
 		
 	}
-
+	
 	*keeping only triplets with some sort ofclassification 
 	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
 	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
@@ -600,8 +632,38 @@ preserve
 
 restore 
 
+*-------------------------------------------------------------------------------
+* Calculating nature and supernatural
+*-------------------------------------------------------------------------------
+preserve
 
+	gen nature_any_super= 1 if (nature_scl==1 | nature_ocl==1) & (supernatural_scl==1 | supernatural_ocl==1)
+	gen nature_any_nosuper= 1 if (nature_scl==1 | nature_ocl==1) & supernatural_scl==0 & supernatural_ocl==0
 
+	gen nature_scl_super=1 if nature_scl==1 & (supernatural_scl==1 | supernatural_ocl==1)
+	gen nature_scl_nosuper=1 if nature_scl==1 & supernatural_scl==0 & supernatural_ocl==0
+
+	gen nature_ocl_super=1 if nature_ocl==1 & (supernatural_scl==1 | supernatural_ocl==1)
+	gen nature_ocl_nosuper=1 if nature_ocl==1 & supernatural_scl==0 & supernatural_ocl==0
+
+	*keeping only triplets with some sort ofclassification 
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+
+	collapse (sum) n_triplets_act=obs_tag nature_any_super nature_any_nosuper nature_scl_super nature_scl_nosuper nature_ocl_super nature_ocl_nosuper, by(motif_id)
+	
+ 	gen d_nature_any_super=(nature_any_super>0) if nature_any_super!=.
+ 	gen d_nature_any_nosuper=(nature_any_nosuper>0) if nature_any_nosuper!=.
+ 	gen d_nature_scl_super=(nature_scl_super>0) if nature_scl_super!=.
+ 	gen d_nature_scl_nosuper=(nature_scl_nosuper>0) if nature_scl_nosuper!=.
+ 	gen d_nature_ocl_super=(nature_ocl_super>0) if nature_ocl_super!=.
+ 	gen d_nature_ocl_nosuper=(nature_ocl_nosuper>0) if nature_ocl_nosuper!=.
+
+	tempfile Triplets_super
+	save `Triplets_super', replace
+
+restore 
 
 *-------------------------------------------------------------------------------
 * Continuous ACT measures
@@ -634,6 +696,7 @@ merge m:1 motif_id using `Triplets_act_v3', keep(1 3) gen(merge_triplet_act_v3)
 merge m:1 motif_id using `Triplets_act_v4', keep(1 3) gen(merge_triplet_act_v4)
 *merge m:1 motif_id using `Triplets_kill', keep(1 3) gen(merge_triplet_kill)
 merge m:1 motif_id using `Triplets_verbs', keep(1 3) gen(merge_triplet_verbs)
+merge m:1 motif_id using `Triplets_super', keep(1 3) gen(merge_triplet_super)
 merge m:1 motif_id using `ACT_cont', keep(1 3) gen(merge_act_cont)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
@@ -788,6 +851,14 @@ foreach verb of global verbs{
 	gen sh_nature_scl_no`verb'_atl=d_nature_scl_no`verb'/n_motifs
 }
 
+*Supernatural  
+gen sh_nature_any_super_atl=d_nature_any_super/n_motifs
+gen sh_nature_any_nosuper_atl=d_nature_any_nosuper/n_motifs
+gen sh_nature_scl_super_atl=d_nature_scl_super/n_motifs
+gen sh_nature_scl_nosuper_atl=d_nature_scl_nosuper/n_motifs
+gen sh_nature_ocl_super_atl=d_nature_ocl_super/n_motifs
+gen sh_nature_ocl_nosuper_atl=d_nature_ocl_nosuper/n_motifs
+
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
 la var sh_nature_subj_excl "Share of triplets with a nature subject (Exclusive)"
@@ -935,6 +1006,13 @@ foreach verb of global verbs{
 	la var sh_nature_scl_`verb'_atl "sh of motifs w at least one triplet w nature subject and verb `verb'"
 	la var sh_nature_scl_no`verb'_atl "sh of motifs w at least one triplet w nature subject and no verb `verb'"
 }
+
+la var sh_nature_any_super_atl "sh of motifs w at least one triplet w nature (subj/obj) and mention of supernatural"
+la var sh_nature_any_nosuper_atl "sh of motifs w at least one triplet w nature (subj/obj) and no mention of supernatural"
+la var sh_nature_scl_super_atl "sh of motifs w at least one triplet w nature subject and mention of supernatural"
+la var sh_nature_scl_nosuper_atl "sh of motifs w at least one triplet w nature subject and no mention of supernatural"
+la var sh_nature_ocl_super_atl "sh of motifs w at least one triplet w nature object and mention of supernatural"
+la var sh_nature_ocl_nosuper_atl "sh of motifs w at least one triplet w nature object and no mention of supernatural"
 
 la var evaluation "ACT Evaluation"
 la var potency "ACT Potency"
