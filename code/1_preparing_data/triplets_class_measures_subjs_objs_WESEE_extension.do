@@ -276,13 +276,15 @@ preserve
 
 	*Looking at triplets where subjec=nature & object=human/manmade. 
 	gen nature_scl_human_ocl=1 if nature_scl==1 & (human_ocl==1 | manmade_ocl==1)
+	gen nature_scl_nohuman_ocl=1 if nature_scl==1 & human_ocl==0 & manmade_ocl==0 & object!=""
 	gen human_scl_nature_ocl=1 if human_scl==1 & nature_ocl==1 
 	gen nature_scl_or_ocl=1 if nature_scl==1 | nature_ocl==1 
 	gen nature_scl_major_ocl=1 if (nature_scl > nature_ocl) & nature_scl!=. & nature_ocl!=.
 
-	collapse (sum) n_triplets_socl=obs_tag nature_scl_human_ocl human_scl_nature_ocl nature_scl_or_ocl nature_scl_major_ocl, by(motif_id)
+	collapse (sum) n_triplets_socl=obs_tag nature_scl_human_ocl human_scl_nature_ocl nature_scl_or_ocl nature_scl_major_ocl nature_scl_nohuman_ocl, by(motif_id)
 
 	gen d_nature_scl_human_ocl=(nature_scl_human_ocl>0) if nature_scl_human_ocl!=.
+	gen d_nature_scl_nohuman_ocl=(nature_scl_nohuman_ocl>0) if nature_scl_nohuman_ocl!=.
 	gen d_human_scl_nature_ocl=(human_scl_nature_ocl>0) if human_scl_nature_ocl!=.
 	gen d_nature_scl_human_ocl_major=(nature_scl_human_ocl>human_scl_nature_ocl) if nature_scl_human_ocl!=. & human_scl_nature_ocl!=.
 	
@@ -666,6 +668,37 @@ preserve
 restore 
 
 *-------------------------------------------------------------------------------
+* Calculating nature and different object types 
+*-------------------------------------------------------------------------------
+preserve
+	
+	gen nature_scl_human_ocl=1 if nature_scl==1 & (human_ocl==1 | manmade_ocl==1)
+	
+	gen nature_scl_super_ocl=1 if nature_scl==1 & (supernatural_ocl==1 | hybrid_ocl==1)
+	replace nature_scl_super_ocl=. if nature_scl_human_ocl==1
+	
+	gen nature_scl_nature_ocl=1 if nature_scl==1 & nature_ocl==1
+	replace nature_scl_nature_ocl=. if nature_scl_human_ocl==1
+	
+	gen nature_scl_miss_ocl=1 if nature_scl==1 & object==""
+	
+	*keeping only triplets with some sort ofclassification 
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+
+	collapse (sum) n_triplets_act=obs_tag nature_scl_super_ocl nature_scl_human_ocl nature_scl_nature_ocl nature_scl_miss_ocl, by(motif_id)
+	
+	gen d_nature_scl_super_ocl=(nature_scl_super_ocl>0) if nature_scl_super_ocl!=.
+	gen d_nature_scl_human_ocl=(nature_scl_human_ocl>0) if nature_scl_human_ocl!=.
+	gen d_nature_scl_nature_ocl=(nature_scl_nature_ocl>0) if nature_scl_nature_ocl!=.
+	gen d_nature_scl_miss_ocl=(nature_scl_miss_ocl>0) if nature_scl_miss_ocl!=.
+
+	tempfile Triplets_nature_ocl
+	save `Triplets_nature_ocl', replace
+
+restore 
+*-------------------------------------------------------------------------------
 * Continuous ACT measures
 *-------------------------------------------------------------------------------
 preserve
@@ -697,6 +730,7 @@ merge m:1 motif_id using `Triplets_act_v4', keep(1 3) gen(merge_triplet_act_v4)
 *merge m:1 motif_id using `Triplets_kill', keep(1 3) gen(merge_triplet_kill)
 merge m:1 motif_id using `Triplets_verbs', keep(1 3) gen(merge_triplet_verbs)
 merge m:1 motif_id using `Triplets_super', keep(1 3) gen(merge_triplet_super)
+merge m:1 motif_id using `Triplets_nature_ocl', keep(1 3) gen(merge_triplet_nature_ocl)
 merge m:1 motif_id using `ACT_cont', keep(1 3) gen(merge_act_cont)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
@@ -751,6 +785,8 @@ gen sh_nature_omotif_major_excl=d_nature_major_excl_ocl/n_motifs
 gen sh_nature_subj_human_obj=nature_scl_human_ocl/n_triplets_socl
 gen sh_human_subj_nature_obj=human_scl_nature_ocl/n_triplets_socl
 gen sh_natsubj_humobj_motif_atleast=d_nature_scl_human_ocl/n_motifs
+gen sh_natsubj_nohumobj_motif_atl=d_nature_scl_nohuman_ocl/n_motifs
+
 gen sh_humsubj_natobj_motif_atleast=d_human_scl_nature_ocl/n_motifs
 gen sh_natsubj_humobj_motif_major=d_nature_scl_human_ocl_major/n_motifs
 
@@ -859,6 +895,12 @@ gen sh_nature_scl_nosuper_atl=d_nature_scl_nosuper/n_motifs
 gen sh_nature_ocl_super_atl=d_nature_ocl_super/n_motifs
 gen sh_nature_ocl_nosuper_atl=d_nature_ocl_nosuper/n_motifs
 
+*Nature and different object types
+gen sh_nature_scl_super_ocl_atl=d_nature_scl_super_ocl/n_motifs
+gen sh_nature_scl_human_ocl_atl=d_nature_scl_human_ocl/n_motifs
+gen sh_nature_scl_nature_ocl_atl=d_nature_scl_nature_ocl/n_motifs
+gen sh_nature_scl_miss_ocl_atl=d_nature_scl_miss_ocl/n_motifs
+
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
 la var sh_nature_subj_excl "Share of triplets with a nature subject (Exclusive)"
@@ -883,6 +925,8 @@ la var sh_supernat_omotif_atl_nonexcl "Sh of motifs w at least one supernatural 
 la var sh_nature_subj_human_obj "Share of triplets with a nature subject and a human object (Non-Exclusive)"
 la var sh_human_subj_nature_obj "Share of triplets with a human subject and a nature object (Non-Exclusive)"
 la var sh_natsubj_humobj_motif_atleast "Share of motifs with at least one triplet with a nature subject and a human object"
+la var sh_natsubj_nohumobj_motif_atl "Share of motifs with at least one triplet with a nature subject and a non-human object"
+
 la var sh_humsubj_natobj_motif_atleast "Share of motifs with at least one triplet with a human subject and a nature object"
 la var sh_natsubj_humobj_motif_major "Share of motifs in which triplets with nature subject and human object are greater than the opposite"
 
@@ -920,7 +964,10 @@ la var sh_nature_omotif_major_nonexcl "Sh of motifs in which triplets w nature o
 la var sh_nature_omotif_major_excl "Sh of motifs in which triplets w nature objects are greater than human (excl)"
 la var sh_nature_subj_human_obj "Sh of triplets w a nature subject and a human object (non-excl)"
 la var sh_human_subj_nature_obj "Sh of triplets w a human subject and a nature object (non-excl)"
+
 la var sh_natsubj_humobj_motif_atleast "Sh of motifs w at least one triplet w a nature subject and a human object"
+la var sh_natsubj_nohumobj_motif_atl "Sh of motifs w at least one triplet w a nature subject and a non-human object"
+
 la var sh_humsubj_natobj_motif_atleast "Sh of motifs w at least one triplet w a human subject and a nature object"
 la var sh_natsubj_humobj_motif_major "Sh of motifs in which triplets w nature subject and human object are greater than the opposite"
 la var sh_nature_subj_human_obj_excl "Sh of triplets w a nature subject and a human object (excl)"
@@ -1027,6 +1074,10 @@ la var w_activity "Weighted ACT Activity"
 la var w_evaluation_v2 "Weighted ACT Evaluation (Talha)"
 la var w_potency_v2 "Weighted ACT Potency (Talha)"
 la var w_activity_v2 "Weighted ACT Activity (Talha)"
+
+la var sh_nature_scl_super_ocl_atl "sh of motifs w at least one triplet w nature subject and supernatural object"
+la var sh_nature_scl_human_ocl_atl "sh of motifs w at least one triplet w nature subject and human object"
+la var sh_nature_scl_nature_ocl_atl "sh of motifs w at least one triplet w nature subject and nature object"
 
 *la var sh_hum_nat_ppos_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and positive potency"
 *la var sh_hum_nat_pneg_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and negative potency"
