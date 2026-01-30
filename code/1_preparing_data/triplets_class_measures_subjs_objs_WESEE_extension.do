@@ -698,6 +698,33 @@ preserve
 	save `Triplets_nature_ocl', replace
 
 restore 
+
+*-------------------------------------------------------------------------------
+* Calculating nature and different object types 
+*-------------------------------------------------------------------------------
+preserve
+	
+	gen nature_scl_only=1 if nature_scl==1 & human_scl==0 & supernatural_scl==0 & hybrid_scl==0 & manmade_scl==0
+	gen nature_ocl_only=1 if nature_ocl==1 & human_ocl==0 & supernatural_ocl==0 & hybrid_ocl==0 & manmade_ocl==0
+	
+	gen nature_scl_or_ocl_only=1 if (nature_scl_only==1 | nature_ocl_only==1) 
+
+	*keeping only triplets with some sort ofclassification 
+	egen stotal=rowtotal(manmade_scl hybrid_scl supernatural_scl nature_scl human_scl)
+	egen ototal=rowtotal(manmade_ocl hybrid_ocl supernatural_ocl nature_ocl human_ocl)
+	keep if (stotal!=0 | ototal!=0) & obs_tag==1
+	
+	collapse (sum) n_triplets_act=obs_tag nature_scl_or_ocl_only nature_scl_only nature_ocl_only, by(motif_id)
+		
+	gen d_nature_scl_or_ocl_only=(nature_scl_or_ocl_only>0) if nature_scl_or_ocl_only!=.
+	gen d_nature_scl_only=(nature_scl_only>0) if nature_scl_only!=.
+	gen d_nature_ocl_only=(nature_ocl_only>0) if nature_ocl_only!=.
+
+	tempfile Triplets_nature_only
+	save `Triplets_nature_only', replace
+
+restore 
+	
 *-------------------------------------------------------------------------------
 * Continuous ACT measures
 *-------------------------------------------------------------------------------
@@ -731,6 +758,7 @@ merge m:1 motif_id using `Triplets_act_v4', keep(1 3) gen(merge_triplet_act_v4)
 merge m:1 motif_id using `Triplets_verbs', keep(1 3) gen(merge_triplet_verbs)
 merge m:1 motif_id using `Triplets_super', keep(1 3) gen(merge_triplet_super)
 merge m:1 motif_id using `Triplets_nature_ocl', keep(1 3) gen(merge_triplet_nature_ocl)
+merge m:1 motif_id using `Triplets_nature_only', keep(1 3) gen(merge_triplet_nature_only)
 merge m:1 motif_id using `ACT_cont', keep(1 3) gen(merge_act_cont)
 
 unique motif_id if merge_triplet_scl==1	// 80 motifs that do not have a triplet.... 
@@ -900,6 +928,11 @@ gen sh_nature_scl_super_ocl_atl=d_nature_scl_super_ocl/n_motifs
 gen sh_nature_scl_human_ocl_atl=d_nature_scl_human_ocl/n_motifs
 gen sh_nature_scl_nature_ocl_atl=d_nature_scl_nature_ocl/n_motifs
 gen sh_nature_scl_miss_ocl_atl=d_nature_scl_miss_ocl/n_motifs
+
+*Nature exclusive variables 
+gen sh_nature_scl_ocl_only_atl=d_nature_scl_or_ocl_only/n_motifs
+gen sh_nature_scl_only_atl=d_nature_scl_only/n_motifs
+gen sh_nature_ocl_only_atl=d_nature_ocl_only/n_motifs
 
 *Labeling vars 
 la var sh_nature_subj_nonexcl "Share of triplets with a nature subject (Non-Exclusive)"
@@ -1082,9 +1115,12 @@ la var sh_nature_scl_nature_ocl_atl "sh of motifs w at least one triplet w natur
 *la var sh_hum_nat_ppos_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and positive potency"
 *la var sh_hum_nat_pneg_act_atl "Sh of motifs w at least one triplet w human subject, nature object, and negative potency"
 
+la var sh_nature_scl_ocl_only_atl "sh of motifs w at least one triplet w nature subject or object only"
+la var sh_nature_scl_only_atl "sh of motifs w at least one triplet w nature subject only"
+la var sh_nature_ocl_only_atl "sh of motifs w at least one triplet w nature object only"
+
 tempfile Motifs_EA_WESEE
 save `Motifs_EA_WESEE', replace 
-
 
 /*-------------------------------------------------------------------------------
 * Making correlation plots for Nathan between measures at the EA lvl
