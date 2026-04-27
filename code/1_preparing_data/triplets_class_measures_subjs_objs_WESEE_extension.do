@@ -1251,7 +1251,7 @@ forval c=1/8{
 	merge m:1 v114 using `EA_CLUST`c'', keep(1 3) nogen 
 }
 
-foreach var of varlist v1-v90 v95 v96 {
+foreach var of varlist v1-v90 v95 v96 v98 {
 	
 	forval c=1/8{
 		replace `var'=`var'_clust`c' if `var'==0 | `var'==.
@@ -1270,7 +1270,7 @@ export delimited using "${data}/raw\ethnographic_atlas\ethnographic_atlas_east_s
 gen atlas=subinstr(v107,".","",.)
 replace atlas=trim(atlas)
 
-keep atlas v107 v114 v91 v92 v93
+keep atlas v107 v114 v91 v92 v93 v98 v99
 keep if atlas!=""
 
 *Merging the data together
@@ -1327,7 +1327,7 @@ forval c=1/8{
 	merge m:1 v114 using `EA_CLUST`c'', keep(1 3) nogen 
 }
 
-foreach var of varlist v6-v90 v95 v96 v102 {
+foreach var of varlist v6-v90 v95 v96 v98 v102 {
 	
 	forval c=1/8{
 		replace `var'=`var'_clust`c' if `var'==0 | `var'==.
@@ -1335,13 +1335,13 @@ foreach var of varlist v6-v90 v95 v96 v102 {
 	
 }
 
-keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1 v1 v2 v3 v4 v5 v102 v95 v96
+keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1 v1 v2 v3 v4 v5 v102 v95 v96 v98 v99
 
 *Fixing the v32 variable
 recode v32 (2=1) (3=2) (4=3)
 
 *Fixing the values for Portuguese and Afrikaans
-foreach var in v30 v31 v32 v33 v34 v54 v66 {
+foreach var in v30 v31 v32 v33 v34 v54 v66 v98 {
 	
 	gen x=`var' if id=="POR-BRA"
 	bys v114: egen mean_x=mean(x)
@@ -1352,7 +1352,7 @@ foreach var in v30 v31 v32 v33 v34 v54 v66 {
 	
 }
 
-foreach var in v30 v31 v32 v33 v34 v54 v66 {
+foreach var in v30 v31 v32 v33 v34 v54 v66 v98 {
 	
 	gen x=`var' if atlas=="DUTCH"
 	egen mean_x=mean(x)
@@ -1364,11 +1364,11 @@ foreach var in v30 v31 v32 v33 v34 v54 v66 {
 }
 
 *Fixing the missing values
-recode v30 v31 v95 v96 (0=.)
+recode v30 v31 v95 v96 v98 v99 (0=.)
 
 replace v95=v96 if v95==.
 	
-foreach var in v30 v31 v95 {
+foreach var in v30 v31 v95 v98 {
 	
 	bys v114: egen x = mode(`var'), max
 	replace `var'= x if `var'==.
