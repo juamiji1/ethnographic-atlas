@@ -1313,6 +1313,31 @@ save `ANCES', replace
 
 use "${data}/raw\ethnologue\EthnoAtlas_Ethnologue16_extended_EE_Siberia_WES_by_language.dta", clear 
 
+*Fix v114 missingness in the EA-ethnologue concordance first 
+merge m:1 v107 using "${data}/raw\ethnographic_atlas\ethnographic_atlas_fixed.dta", keep(1 3 4 5) keepus(v114) update nogen
+merge m:1 v107 using "${data}/raw\ethnographic_atlas\Easternmost_Europe_final.dta", keep(1 3 4 5) keepus(v114) update nogen
+merge m:1 v107 using "${data}/raw\ethnographic_atlas\Siberia_final.dta", keep(1 3 4 5) keepus(v114) update nogen
+merge m:1 v107 using "${data}/raw\ethnographic_atlas\WES_final.dta", keep(1 3 4 5) keepus(v114) update nogen
+
+* Patches (anchor society in parentheses)
+replace v114 = 213 if v107=="AETA"             // BATAK -- Phil. Negrito
+replace v114 = 366 if v107=="APALAI"            // WAIWAI -- Guiana Carib
+replace v114 = 1   if v107=="BAGIELLI"          // MBUTI -- Pygmy
+replace v114 = 175 if v107=="BONDO"             // BHIL -- C/E Indian tribal
+replace v114 = 372 if v107=="CAWAHIB"           // MUNDURUCU -- Tupi
+replace v114 = 122 if v107=="DANES"             // ICELANDERS -- Scand. Germanic
+replace v114 = 120 if v107=="ENGLISH 1600"      // IRISH -- Insular British Isles
+replace v114 = 124 if v107=="FINNS"             // ESTONIANS -- Finno-Ugric
+replace v114 = 119 if v107=="FRENCH PROVENCE"   // WALLOONS -- Northern Romance
+replace v114 = 121 if v107=="GERMANS PRUSSIA"   // DUTCH -- Germanic
+replace v114 = 116 if v107=="ITALIANS SICILY"   // ROMANS/NEAPOLITANS -- Italian Romance
+replace v114 = 212 if v107=="MAANYAN"           // IBAN -- Borneo Austronesian
+replace v114 = 172 if v107=="NEPALESE KIRANTI"  // MAGAR/SHERPA -- Himalayan Tib-Bur
+replace v114 = 211 if v107=="TAGALOG"           // BISAYAN -- Lowland Phil. Austro
+replace v114 = 145 if v107=="TAJIK (MOUNTAIN)"  // AFGHANS -- C. Asian Iranian
+replace v114 = 117 if v107=="ARGENTINIANS"          
+replace v114 = 45 if v107=="JAMAICANS"  
+
 *Fixing strings
 gen atlas=subinstr(v107,".","",.)
 replace atlas=trim(atlas)
@@ -1335,7 +1360,7 @@ foreach var of varlist v6-v90 v95 v96 v98 v102 {
 	
 }
 
-keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1 v1 v2 v3 v4 v5 v102 v95 v96 v98 v99
+keep id atlas v107 v30 v31 v32 v33 v34 v66 v54 v114 nam_label c1 v1 v2 v3 v4 v5 v102 v95 v96 v98 v99 v114
 
 *Fixing the v32 variable
 recode v32 (2=1) (3=2) (4=3)
@@ -1400,6 +1425,7 @@ encode group_berezkin, gen(eafolk_id)
 *Saving data
 save "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.dta", replace
 export delimited "${data}/interim\Motifs_EA_WESEE_Ethnologue_humanvsnature_all.csv", replace
+
 
 
 *END
